@@ -1,6 +1,6 @@
 from launch import LaunchDescription
-from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
+from launch_ros.actions import Node
 import os
 
 def generate_launch_description():
@@ -9,26 +9,33 @@ def generate_launch_description():
         os.path.dirname(__file__),
         '..',
         'worlds',
-        'test.world'
+        'test.sdf'
     )
 
     return LaunchDescription([
 
+        # Start Gazebo Sim (NEW)
         ExecuteProcess(
-            cmd=['gazebo', '--verbose', world, '-s', 'libgazebo_ros_init.so'],
+            cmd=['gz', 'sim', '-r', world],
             output='screen'
         ),
 
+        # Robot state publisher (unchanged concept)
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
-            parameters=[{'use_sim_time': True}],
-            arguments=[os.path.join(
-                os.path.dirname(__file__),
-                '..',
-                'urdf',
-                'cube_robot.xacro'
-            )]
+            parameters=[{
+                'use_sim_time': True,
+                'robot_description': open(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        '..',
+                        'urdf',
+                        'cube_robot.xacro'
+                    )
+                ).read()
+            }],
+            output='screen'
         ),
 
     ])
