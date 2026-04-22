@@ -1,6 +1,14 @@
 <?xml version="1.0"?>
 <robot name="cube_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+  <!-- Material definitions -->
+  <material name="blue">
+    <color rgba="0 0 1 1"/>
+  </material>
+
+  <!-- Dummy root link (workaround for KDL inertia issue) -->
+  <link name="world"/>
+
   <!-- Base cube -->
   <link name="base_link">
     <visual>
@@ -24,6 +32,12 @@
                izz="0.1"/>
     </inertial>
   </link>
+
+  <!-- Joint from world to base_link -->
+  <joint name="world_base_joint" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
 
   <!-- Lidar -->
   <link name="lidar_link">
