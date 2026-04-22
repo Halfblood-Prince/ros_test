@@ -11,9 +11,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(xacro REQUIRED)
 find_package(robot_state_publisher REQUIRED)
-find_package(gazebo_ros REQUIRED)
 
 # Install directories
 install(DIRECTORY
