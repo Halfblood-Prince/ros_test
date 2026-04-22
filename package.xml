@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>ros_test</name>
+  <version>0.0.1</version>
+  <description>
+    Simple cube robot with lidar in Gazebo, controllable via teleop, with SLAM and RViz visualization.
+  </description>
+
+  <maintainer email="you@todo.com">your_name</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- Build system -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Core ROS2 -->
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+
+  <!-- Simulation -->
+  <depend>gazebo_ros</depend>
+  <depend>gazebo_ros_pkgs</depend>
+
+  <!-- Robot description -->
+  <depend>xacro</depend>
+  <depend>robot_state_publisher</depend>
+
+  <!-- Runtime tools -->
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <!-- Build/export -->
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+
+</package>
