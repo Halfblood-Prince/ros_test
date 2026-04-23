@@ -76,18 +76,16 @@
     </inertial>
   </link>
 
-  <joint name="left_wheel_joint" type="continuous">
+  <joint name="left_wheel_joint" type="fixed">
     <parent link="base_link"/>
     <child link="left_wheel"/>
     <origin xyz="0 0.2 -0.1"/>
-    <axis xyz="0 1 0"/>
   </joint>
 
-  <joint name="right_wheel_joint" type="continuous">
+  <joint name="right_wheel_joint" type="fixed">
     <parent link="base_link"/>
     <child link="right_wheel"/>
     <origin xyz="0 -0.2 -0.1"/>
-    <axis xyz="0 1 0"/>
   </joint>
 
   <link name="lidar_link">
