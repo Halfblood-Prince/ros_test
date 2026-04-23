@@ -20,6 +20,7 @@ def generate_launch_description():
     sim_model_file = PathJoinSubstitution([pkg_share, 'models', 'cuboid_robot.sdf'])
     rviz_config = PathJoinSubstitution([pkg_share, 'rviz', 'mapping.rviz'])
     slam_params = PathJoinSubstitution([pkg_share, 'config', 'slam_toolbox.yaml'])
+    bridge_config = PathJoinSubstitution([pkg_share, 'config', 'bridge.yaml'])
 
     robot_description = Command([
         FindExecutable(name='xacro'),
@@ -65,33 +66,7 @@ def generate_launch_description():
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[
-            '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry'
-        ],
-        output='screen'
-    )
-
-    scan_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
-        ],
-        parameters=[{'override_frame_id': 'lidar_link'}],
-        output='screen'
-    )
-
-    tf_bridge = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/model/cuboid_robot/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
-        ],
-        remappings=[
-            ('/model/cuboid_robot/tf', '/tf')
-        ],
+        arguments=['--ros-args', '-p', ['config_file:=', bridge_config]],
         output='screen'
     )
 
@@ -131,7 +106,7 @@ def generate_launch_description():
         gazebo,
         robot_state_publisher,
         TimerAction(period=2.0, actions=[spawn_entity]),
-        TimerAction(period=2.5, actions=[bridge, scan_bridge, tf_bridge]),
+        TimerAction(period=2.5, actions=[bridge]),
         TimerAction(period=3.0, actions=[teleop, rviz]),
         TimerAction(period=4.0, actions=[slam])
     ])
