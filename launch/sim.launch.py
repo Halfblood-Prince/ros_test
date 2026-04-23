@@ -70,6 +70,12 @@ def generate_launch_description():
         output='screen'
     )
 
+    odom_to_tf = Node(
+        package='cuboid_robot_description',
+        executable='odom_to_tf.py',
+        output='screen'
+    )
+
     teleop = Node(
         package='teleop_twist_keyboard',
         executable='teleop_twist_keyboard',
@@ -106,7 +112,7 @@ def generate_launch_description():
         gazebo,
         robot_state_publisher,
         TimerAction(period=2.0, actions=[spawn_entity]),
-        TimerAction(period=2.5, actions=[bridge]),
+        TimerAction(period=2.5, actions=[bridge, odom_to_tf]),
         TimerAction(period=3.0, actions=[teleop, rviz]),
         TimerAction(period=4.0, actions=[slam])
     ])
