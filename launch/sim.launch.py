@@ -46,6 +46,16 @@ def generate_launch_description():
         output='screen'
     )
 
+    joint_state_publisher = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        parameters=[{
+            'use_sim_time': True,
+            'rate': 30.0
+        }],
+        output='screen'
+    )
+
     gazebo = ExecuteProcess(
         cmd=['gz', 'sim', '-r', world],
         output='screen'
@@ -129,8 +139,10 @@ def generate_launch_description():
         DeclareLaunchArgument('teleop_terminal', default_value='x-terminal-emulator -e'),
         gazebo_resource_path,
         gazebo,
+        joint_state_publisher,
         robot_state_publisher,
         TimerAction(period=2.0, actions=[spawn_entity]),
         TimerAction(period=2.5, actions=[bridge, scan_bridge, tf_bridge]),
-        TimerAction(period=3.0, actions=[teleop, slam, rviz])
+        TimerAction(period=3.0, actions=[teleop, rviz]),
+        TimerAction(period=4.0, actions=[slam])
     ])
