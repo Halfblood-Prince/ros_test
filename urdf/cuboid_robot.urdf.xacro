@@ -1,14 +1,28 @@
 <?xml version="1.0"?>
 <robot name="cuboid_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Base -->
+  <material name="gray">
+    <color rgba="0.6 0.6 0.6 1.0"/>
+  </material>
+
+  <material name="black">
+    <color rgba="0.1 0.1 0.1 1.0"/>
+  </material>
+
+  <material name="red">
+    <color rgba="0.9 0.1 0.1 1.0"/>
+  </material>
+
   <link name="base_link">
     <visual>
+      <origin xyz="0 0 0"/>
       <geometry>
         <box size="0.5 0.3 0.2"/>
       </geometry>
+      <material name="gray"/>
     </visual>
     <collision>
+      <origin xyz="0 0 0"/>
       <geometry>
         <box size="0.5 0.3 0.2"/>
       </geometry>
@@ -20,9 +34,47 @@
     </inertial>
   </link>
 
-  <!-- Wheels -->
-  <link name="left_wheel"/>
-  <link name="right_wheel"/>
+  <link name="left_wheel">
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" iyy="0.001" izz="0.002"
+               ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
+
+  <link name="right_wheel">
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <inertia ixx="0.002" iyy="0.001" izz="0.002"
+               ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
 
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
@@ -38,8 +90,24 @@
     <axis xyz="0 1 0"/>
   </joint>
 
-  <!-- Lidar -->
-  <link name="lidar_link"/>
+  <link name="lidar_link">
+    <visual>
+      <geometry>
+        <cylinder radius="0.05" length="0.06"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.05" length="0.06"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="0.0002" iyy="0.0002" izz="0.0002"
+               ixy="0.0" ixz="0.0" iyz="0.0"/>
+    </inertial>
+  </link>
 
   <joint name="lidar_joint" type="fixed">
     <parent link="base_link"/>
@@ -47,31 +115,40 @@
     <origin xyz="0 0 0.2"/>
   </joint>
 
-  <!-- Gazebo Lidar -->
   <gazebo reference="lidar_link">
     <sensor name="lidar" type="gpu_lidar">
       <update_rate>10</update_rate>
-      <topic>scan</topic>
+      <topic>/scan</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.12</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+      </lidar>
     </sensor>
   </gazebo>
 
-  <!-- Diff Drive Plugin (CRITICAL) -->
   <gazebo>
     <plugin filename="libgz-sim-diff-drive-system.so"
             name="gz::sim::systems::DiffDrive">
-
       <left_joint>left_wheel_joint</left_joint>
       <right_joint>right_wheel_joint</right_joint>
-
       <wheel_separation>0.4</wheel_separation>
       <wheel_radius>0.1</wheel_radius>
-
       <topic>/cmd_vel</topic>
-
       <odom_topic>/odom</odom_topic>
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
-
     </plugin>
   </gazebo>
 
