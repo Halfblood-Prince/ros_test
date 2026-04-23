@@ -36,7 +36,7 @@
     </link>
 
     <link name="left_wheel">
-      <pose>0 0.2 -0.1 1.5708 0 0</pose>
+      <pose>0 0.2 -0.1 0 0 0</pose>
       <inertial>
         <mass>0.5</mass>
         <inertia>
@@ -49,6 +49,7 @@
         </inertia>
       </inertial>
       <collision name="left_wheel_collision">
+        <pose>0 0 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.1</radius>
@@ -57,6 +58,7 @@
         </geometry>
       </collision>
       <visual name="left_wheel_visual">
+        <pose>0 0 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.1</radius>
@@ -71,7 +73,7 @@
     </link>
 
     <link name="right_wheel">
-      <pose>0 -0.2 -0.1 1.5708 0 0</pose>
+      <pose>0 -0.2 -0.1 0 0 0</pose>
       <inertial>
         <mass>0.5</mass>
         <inertia>
@@ -84,6 +86,7 @@
         </inertia>
       </inertial>
       <collision name="right_wheel_collision">
+        <pose>0 0 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.1</radius>
@@ -92,6 +95,7 @@
         </geometry>
       </collision>
       <visual name="right_wheel_visual">
+        <pose>0 0 0 1.5708 0 0</pose>
         <geometry>
           <cylinder>
             <radius>0.1</radius>

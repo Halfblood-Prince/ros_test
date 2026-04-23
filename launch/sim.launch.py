@@ -106,7 +106,7 @@ def generate_launch_description():
 
     slam = Node(
         package='slam_toolbox',
-        executable='sync_slam_toolbox_node',
+        executable='async_slam_toolbox_node',
         name='slam_toolbox',
         condition=IfCondition(use_slam),
         output='screen',
