@@ -4,7 +4,7 @@ Panels:
   Name: Displays
 Visualization Manager:
   Class: ""
-  Fixed Frame: map
+  Fixed Frame: base_link
   Displays:
   - Class: rviz_default_plugins/Grid
     Name: Grid

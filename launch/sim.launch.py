@@ -1,7 +1,7 @@
 import os
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
 from launch.substitutions import Command, EnvironmentVariable, FindExecutable, LaunchConfiguration, PathJoinSubstitution
@@ -13,11 +13,12 @@ def generate_launch_description():
     use_rviz = LaunchConfiguration('use_rviz')
     use_slam = LaunchConfiguration('use_slam')
     use_teleop = LaunchConfiguration('use_teleop')
+    teleop_terminal = LaunchConfiguration('teleop_terminal')
 
     world = PathJoinSubstitution([pkg_share, 'worlds', 'sample_world.sdf'])
     robot_file = PathJoinSubstitution([pkg_share, 'urdf', 'cuboid_robot.urdf.xacro'])
     slam_params = PathJoinSubstitution([pkg_share, 'config', 'slam_toolbox.yaml'])
-    rviz_config = PathJoinSubstitution([pkg_share, 'config', 'rviz.rviz'])
+    rviz_config = PathJoinSubstitution([pkg_share, 'rviz', 'mapping.rviz'])
 
     robot_description = Command([
         FindExecutable(name='xacro'),
@@ -75,7 +76,9 @@ def generate_launch_description():
     teleop = Node(
         package='teleop_twist_keyboard',
         executable='teleop_twist_keyboard',
+        prefix=[teleop_terminal, ' '],
         condition=IfCondition(use_teleop),
+        emulate_tty=True,
         output='screen'
     )
 
@@ -100,12 +103,11 @@ def generate_launch_description():
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('use_slam', default_value='true'),
         DeclareLaunchArgument('use_teleop', default_value='false'),
+        DeclareLaunchArgument('teleop_terminal', default_value='xterm -e'),
         gazebo_resource_path,
         gazebo,
         robot_state_publisher,
-        spawn_entity,
-        bridge,
-        teleop,
-        slam,
-        rviz
+        TimerAction(period=2.0, actions=[spawn_entity]),
+        TimerAction(period=2.5, actions=[bridge]),
+        TimerAction(period=3.0, actions=[teleop, slam, rviz])
     ])
