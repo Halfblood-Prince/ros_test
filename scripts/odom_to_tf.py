@@ -16,6 +16,7 @@ class OdomToTf(Node):
     def _handle_odom(self, msg: Odometry) -> None:
         transform = TransformStamped()
         transform.header = msg.header
+        transform.header.frame_id = msg.header.frame_id or 'odom'
         transform.child_frame_id = msg.child_frame_id or 'base_link'
         transform.transform.translation.x = msg.pose.pose.position.x
         transform.transform.translation.y = msg.pose.pose.position.y
