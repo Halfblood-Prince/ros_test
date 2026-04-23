@@ -11,6 +11,10 @@
   <depend>ros_gz_sim</depend>
   <depend>ros_gz_bridge</depend>
   <depend>teleop_twist_keyboard</depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
   <depend>slam_toolbox</depend>
   <depend>rviz2</depend>
   <depend>gazebo_msgs</depend>
