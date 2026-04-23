@@ -104,7 +104,7 @@ def generate_launch_description():
         DeclareLaunchArgument('use_rviz', default_value='true'),
         DeclareLaunchArgument('use_slam', default_value='true'),
         DeclareLaunchArgument('use_teleop', default_value='false'),
-        DeclareLaunchArgument('teleop_terminal', default_value='xterm -e'),
+        DeclareLaunchArgument('teleop_terminal', default_value='x-terminal-emulator -e'),
         gazebo_resource_path,
         gazebo,
         robot_state_publisher,
