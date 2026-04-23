@@ -17,6 +17,7 @@ def generate_launch_description():
 
     world = PathJoinSubstitution([pkg_share, 'worlds', 'sample_world.sdf'])
     robot_file = PathJoinSubstitution([pkg_share, 'urdf', 'cuboid_robot.urdf.xacro'])
+    sim_model_file = PathJoinSubstitution([pkg_share, 'models', 'cuboid_robot.sdf'])
     rviz_config = PathJoinSubstitution([pkg_share, 'rviz', 'mapping.rviz'])
     slam_params = PathJoinSubstitution([pkg_share, 'config', 'slam_toolbox.yaml'])
 
@@ -54,7 +55,7 @@ def generate_launch_description():
         package='ros_gz_sim',
         executable='create',
         arguments=[
-            '-topic', 'robot_description',
+            '-file', sim_model_file,
             '-name', 'cuboid_robot',
             '-z', '0.25'
         ],
