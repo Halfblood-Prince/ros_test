@@ -4,10 +4,14 @@ Panels:
   Name: Displays
 Visualization Manager:
   Class: ""
-  Fixed Frame: base_link
+  Fixed Frame: odom
   Displays:
   - Class: rviz_default_plugins/Grid
     Name: Grid
+  - Class: rviz_default_plugins/RobotModel
+    Name: RobotModel
+    Description Topic:
+      Value: /robot_description
   - Class: rviz_default_plugins/Map
     Name: Map
     Topic: /map
@@ -17,6 +21,5 @@ Visualization Manager:
     Size (m): 0.05
     Style: Flat Squares
     Color: 255; 0; 0
-    Use Fixed Frame: true
   - Class: rviz_default_plugins/TF
     Name: TF
