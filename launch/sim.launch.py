@@ -21,6 +21,7 @@ def generate_launch_description():
     rviz_config = PathJoinSubstitution([pkg_share, 'rviz', 'mapping.rviz'])
     slam_params = PathJoinSubstitution([pkg_share, 'config', 'slam_toolbox.yaml'])
     bridge_config = PathJoinSubstitution([pkg_share, 'config', 'bridge.yaml'])
+    odom_to_tf_script = PathJoinSubstitution([pkg_share, 'scripts', 'odom_to_tf.py'])
 
     robot_description = Command([
         FindExecutable(name='xacro'),
@@ -70,9 +71,8 @@ def generate_launch_description():
         output='screen'
     )
 
-    odom_to_tf = Node(
-        package='cuboid_robot_description',
-        executable='odom_to_tf.py',
+    odom_to_tf = ExecuteProcess(
+        cmd=['python3', odom_to_tf_script],
         output='screen'
     )
 
