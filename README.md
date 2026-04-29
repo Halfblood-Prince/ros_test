@@ -20,11 +20,35 @@ colcon build --packages-select cube
 Run bringup (after sourcing install):
 
 ```bash
+# Launch without Gazebo (default)
 ros2 launch cube bringup.launch.py
+
+# Launch with Gazebo (only if you have Gazebo and the gazebo_ros package available)
+ros2 launch cube bringup.launch.py use_gazebo:=true
 ```
 
 Run keyboard control node:
 
 ```bash
 ros2 run cube keyboard_control
+
+Using Gazebo keyboard (gz-keypress)
+
+- Start bringup with Gazebo and enable the topic-mode keyboard node:
+
+```bash
+ros2 launch cube bringup.launch.py use_gazebo:=true use_gz_keyboard:=true
+```
+
+- The launched `keyboard_control` node will subscribe to the `/keyboard` topic.
+	Forward Gazebo key events to that topic (for example using `ros_ign_bridge`),
+	or test manually by publishing single-character messages:
+
+```bash
+ros2 topic pub /keyboard std_msgs/msg/String "data: 'w'" --once
+```
+
+- When running Gazebo, you can use a keypress tool (e.g. the `gz keyboard` utility
+	or a Gazebo plugin) to emit key events; bridge those events into ROS on the
+	`/keyboard` topic so the node receives them.
 ```
