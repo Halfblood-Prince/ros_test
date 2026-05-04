@@ -159,16 +159,16 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "nav2",
-                default_value="false",
-                description="Set true to launch Nav2 and send exploration waypoints.",
+                default_value="true",
+                description="Set false to disable Nav2 autonomous waypoint scanning.",
             ),
             gazebo,
             bridge,
             odom_to_tf,
             scan_to_chassis,
             TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
-            TimerAction(period=8.0, actions=[nav2]),
-            TimerAction(period=16.0, actions=[nav2_explorer]),
-            TimerAction(period=4.0, actions=[rviz]),
+            TimerAction(period=8.0, actions=[rviz]),
+            TimerAction(period=12.0, actions=[nav2]),
+            TimerAction(period=25.0, actions=[nav2_explorer]),
         ]
     )

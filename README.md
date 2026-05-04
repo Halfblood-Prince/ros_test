@@ -24,7 +24,7 @@ source install/setup.bash
 ros2 launch ros_test gazebo_slam.launch.py
 ```
 
-Gazebo opens with a floating Teleop panel. Use that panel to publish Gazebo `/cmd_vel` commands and drive the robot through the floor plan. RViz opens with `/scan`, TF, and `/map` displays.
+Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 sends waypoint goals around the floor plan so the robot scans rooms automatically.
 
 The launch starts:
 
@@ -36,28 +36,29 @@ The launch starts:
 - `slam_toolbox`, publishing `/map` from `/scan` and TF
 - RViz
 - `map_monitor`, which reports when `/map` is received
+- Nav2, publishing `/cmd_vel` from waypoint goals
 
-## Optional autonomous motion
+## Manual and Fallback Modes
 
-For hands-off mapping:
-
-```bash
-ros2 launch ros_test gazebo_slam.launch.py auto_drive:=true
-```
-
-For Nav2 autonomous scanning with waypoint goals:
+To disable Nav2 and drive only from the Gazebo Teleop panel:
 
 ```bash
-ros2 launch ros_test gazebo_slam.launch.py nav2:=true
+ros2 launch ros_test gazebo_slam.launch.py nav2:=false
 ```
 
-This keeps `slam_toolbox` running and starts Nav2 after a short delay. A small waypoint explorer sends goals around the floor plan so the robot scans more rooms automatically.
+For the simple wall-following driver instead of Nav2:
+
+```bash
+ros2 launch ros_test gazebo_slam.launch.py nav2:=false auto_drive:=true
+```
 
 For the older odom-only fallback mapper:
 
 ```bash
-ros2 launch ros_test gazebo_slam.launch.py mapper:=true
+ros2 launch ros_test gazebo_slam.launch.py nav2:=false mapper:=true
 ```
+
+If the RViz map appears to slide with the robot, make sure RViz Global Options uses fixed frame `map`, not `odom`. The robot should move in the map; the map should not move with the robot.
 
 ## Expected topics
 
