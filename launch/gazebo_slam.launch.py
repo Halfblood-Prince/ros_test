@@ -19,7 +19,7 @@ def generate_launch_description():
         "map_frame": "map",
         "odom_frame": "odom",
         "base_frame": "chassis",
-        "scan_topic": "/lidar",
+        "scan_topic": "/scan",
         "throttle_scans": 1,
         "transform_publish_period": 0.02,
         "map_update_interval": 2.0,
@@ -61,7 +61,7 @@ def generate_launch_description():
         output="screen",
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-            "/lidar@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
@@ -98,7 +98,7 @@ def generate_launch_description():
         name="slam_toolbox",
         output="screen",
         parameters=[slam_params],
-        remappings=[("scan", "/lidar")],
+        remappings=[("scan", "/scan")],
     )
 
     rviz = Node(

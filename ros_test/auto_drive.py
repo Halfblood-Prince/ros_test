@@ -12,13 +12,13 @@ class AutoDrive(Node):
         self._cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
         self._scan = None
         self._logged_first_scan = False
-        self.create_subscription(LaserScan, "/lidar", self._handle_scan, 10)
+        self.create_subscription(LaserScan, "/scan", self._handle_scan, 10)
         self.create_timer(0.1, self._publish_cmd)
 
     def _handle_scan(self, msg):
         self._scan = msg
         if not self._logged_first_scan:
-            self.get_logger().info("Auto drive received /lidar and is publishing /cmd_vel")
+            self.get_logger().info("Auto drive received /scan and is publishing /cmd_vel")
             self._logged_first_scan = True
 
     def _publish_cmd(self):
