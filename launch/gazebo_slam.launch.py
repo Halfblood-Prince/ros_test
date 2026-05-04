@@ -1,5 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -10,6 +11,7 @@ def generate_launch_description():
     package_share = FindPackageShare("ros_test")
     world = LaunchConfiguration("world")
     gz_args = LaunchConfiguration("gz_args")
+    auto_drive_enabled = LaunchConfiguration("auto_drive")
 
     default_world = PathJoinSubstitution([package_share, "robot.sdf"])
     rviz_config = PathJoinSubstitution([package_share, "rviz", "slam.rviz"])
@@ -107,6 +109,7 @@ def generate_launch_description():
         name="auto_drive",
         output="screen",
         parameters=[{"use_sim_time": True}],
+        condition=IfCondition(auto_drive_enabled),
     )
 
     map_monitor = Node(
@@ -146,6 +149,11 @@ def generate_launch_description():
                 "gz_args",
                 default_value="-r",
                 description="Arguments passed to gz sim before the world path.",
+            ),
+            DeclareLaunchArgument(
+                "auto_drive",
+                default_value="false",
+                description="Set true to make the robot drive itself with lidar obstacle avoidance.",
             ),
             gazebo,
             bridge,
