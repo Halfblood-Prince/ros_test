@@ -15,6 +15,8 @@ class SimpleMapper(Node):
         self._height = 560
         self._origin_x = -12.0
         self._origin_y = -8.0
+        self._lidar_offset_x = 0.45
+        self._lidar_offset_y = 0.0
         self._log_odds = [0.0] * (self._width * self._height)
         self._odom = None
         self._got_scan = False
@@ -40,15 +42,23 @@ class SimpleMapper(Node):
         robot_x = pose.position.x
         robot_y = pose.position.y
         robot_yaw = self._yaw_from_quaternion(pose.orientation)
+        lidar_x = robot_x + (
+            self._lidar_offset_x * math.cos(robot_yaw)
+            - self._lidar_offset_y * math.sin(robot_yaw)
+        )
+        lidar_y = robot_y + (
+            self._lidar_offset_x * math.sin(robot_yaw)
+            + self._lidar_offset_y * math.cos(robot_yaw)
+        )
 
         angle = msg.angle_min
         for range_value in msg.ranges:
             usable = math.isfinite(range_value)
             clipped_range = min(range_value if usable else msg.range_max, msg.range_max)
             if clipped_range >= msg.range_min:
-                end_x = robot_x + clipped_range * math.cos(robot_yaw + angle)
-                end_y = robot_y + clipped_range * math.sin(robot_yaw + angle)
-                self._mark_ray(robot_x, robot_y, end_x, end_y, usable and range_value < msg.range_max)
+                end_x = lidar_x + clipped_range * math.cos(robot_yaw + angle)
+                end_y = lidar_y + clipped_range * math.sin(robot_yaw + angle)
+                self._mark_ray(lidar_x, lidar_y, end_x, end_y, usable and range_value < msg.range_max)
             angle += msg.angle_increment
 
         if not self._got_scan:
@@ -65,9 +75,9 @@ class SimpleMapper(Node):
         if not cells:
             return
 
-        free_cells = cells[:-2] if mark_hit and len(cells) > 2 else cells
+        free_cells = cells[:-4] if mark_hit and len(cells) > 4 else cells
         for x, y in free_cells:
-            self._add_log_odds(x, y, -0.2)
+            self._mark_free(x, y)
 
         if mark_hit:
             self._mark_occupied(cells[-1][0], cells[-1][1])
@@ -96,13 +106,18 @@ class SimpleMapper(Node):
         index = y * self._width + x
         self._log_odds[index] = max(-4.0, min(4.0, self._log_odds[index] + delta))
 
+    def _mark_free(self, x, y):
+        index = y * self._width + x
+        if self._log_odds[index] < 0.8:
+            self._log_odds[index] = max(-4.0, self._log_odds[index] - 0.08)
+
     def _mark_occupied(self, center_x, center_y):
         for dx in (-1, 0, 1):
             for dy in (-1, 0, 1):
                 x = center_x + dx
                 y = center_y + dy
                 if 0 <= x < self._width and 0 <= y < self._height:
-                    self._add_log_odds(x, y, 1.6)
+                    self._add_log_odds(x, y, 2.0)
 
     @staticmethod
     def _occupancy_value(log_odds):
