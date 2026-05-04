@@ -1,12 +1,12 @@
 # ROS 2 Jazzy Gazebo Lidar SLAM Simulation
 
-This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside a building-like floor plan, bridges the simulated sensor data into ROS 2, runs `slam_toolbox`, and opens RViz.
+This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside a building-like floor plan, bridges the simulated sensor data into ROS 2, builds an occupancy grid, and opens RViz.
 
 ## Install dependencies
 
 ```bash
 sudo apt update
-sudo apt install ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-slam-toolbox ros-jazzy-rviz2
+sudo apt install python3-colcon-common-extensions ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-rviz2 ros-jazzy-tf2-ros
 ```
 
 ## Build
@@ -33,7 +33,7 @@ The launch starts:
 - ROS-Gazebo bridge for `/clock`, `/scan_raw`, `/imu`, `/odom`, and ROS `/cmd_vel`
 - scan republisher from `/scan_raw` to `/scan` with frame `base_link`
 - `odom_to_tf`, publishing `odom -> base_link`
-- `slam_toolbox`
+- `simple_mapper`, publishing `/map` from `/scan` and `/odom`
 - RViz
 - `map_monitor`, which reports when `/map` is received
 
@@ -56,4 +56,4 @@ ros2 launch ros_test gazebo_slam.launch.py auto_drive:=true
 /cmd_vel geometry_msgs/msg/Twist
 ```
 
-Move the robot for a few seconds before expecting a useful map. `slam_toolbox` needs lidar scans plus motion through the building.
+Move the robot for a few seconds before expecting a useful map. The mapper needs lidar scans plus motion through the building.

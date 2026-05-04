@@ -27,6 +27,7 @@ setup(
             "map_monitor = ros_test.map_monitor:main",
             "odom_to_tf = ros_test.odom_to_tf:main",
             "scan_to_chassis = ros_test.scan_to_chassis:main",
+            "simple_mapper = ros_test.simple_mapper:main",
         ],
     },
 )

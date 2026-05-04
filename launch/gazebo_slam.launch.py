@@ -16,7 +16,6 @@ def generate_launch_description():
 
     default_world = PathJoinSubstitution([pkg_share, "robot.sdf"])
     default_gui_config = PathJoinSubstitution([pkg_share, "config", "gazebo_teleop.config"])
-    slam_params = PathJoinSubstitution([pkg_share, "config", "slam_toolbox.yaml"])
     rviz_config = PathJoinSubstitution([pkg_share, "rviz", "slam.rviz"])
 
     gazebo = IncludeLaunchDescription(
@@ -58,14 +57,12 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
-    slam_toolbox = Node(
-        package="slam_toolbox",
-        executable="async_slam_toolbox_node",
-        name="slam_toolbox",
+    simple_mapper = Node(
+        package="ros_test",
+        executable="simple_mapper",
+        name="simple_mapper",
         output="screen",
-        parameters=[slam_params, {"use_sim_time": True}],
-        remappings=[("scan", "/scan")],
-        arguments=["--ros-args", "--log-level", "slam_toolbox:=debug"],
+        parameters=[{"use_sim_time": True}],
     )
 
     rviz = Node(
@@ -120,7 +117,7 @@ def generate_launch_description():
             bridge,
             odom_to_tf,
             scan_to_chassis,
-            TimerAction(period=2.0, actions=[slam_toolbox, map_monitor, auto_drive]),
+            TimerAction(period=2.0, actions=[simple_mapper, map_monitor, auto_drive]),
             TimerAction(period=4.0, actions=[rviz]),
         ]
     )
