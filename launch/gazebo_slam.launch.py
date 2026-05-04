@@ -12,8 +12,36 @@ def generate_launch_description():
     gz_args = LaunchConfiguration("gz_args")
 
     default_world = PathJoinSubstitution([package_share, "robot.sdf"])
-    slam_params = PathJoinSubstitution([package_share, "config", "slam_toolbox.yaml"])
     rviz_config = PathJoinSubstitution([package_share, "rviz", "slam.rviz"])
+    slam_params = {
+        "use_sim_time": True,
+        "mode": "mapping",
+        "map_frame": "map",
+        "odom_frame": "odom",
+        "base_frame": "chassis",
+        "scan_topic": "/lidar",
+        "throttle_scans": 1,
+        "transform_publish_period": 0.02,
+        "map_update_interval": 2.0,
+        "resolution": 0.05,
+        "max_laser_range": 10.0,
+        "minimum_time_interval": 0.2,
+        "transform_timeout": 0.5,
+        "tf_buffer_duration": 30.0,
+        "stack_size_to_use": 40000000,
+        "use_scan_matching": True,
+        "use_scan_barycenter": True,
+        "minimum_travel_distance": 0.1,
+        "minimum_travel_heading": 0.1,
+        "scan_buffer_size": 10,
+        "scan_buffer_maximum_scan_distance": 10.0,
+        "solver_plugin": "solver_plugins::CeresSolver",
+        "ceres_linear_solver": "SPARSE_NORMAL_CHOLESKY",
+        "ceres_preconditioner": "SCHUR_JACOBI",
+        "ceres_trust_strategy": "LEVENBERG_MARQUARDT",
+        "ceres_dogleg_type": "TRADITIONAL_DOGLEG",
+        "ceres_loss_function": "None",
+    }
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -53,10 +81,8 @@ def generate_launch_description():
         executable="async_slam_toolbox_node",
         name="slam_toolbox",
         output="screen",
-        parameters=[
-            slam_params,
-            {"use_sim_time": True},
-        ],
+        parameters=[slam_params],
+        remappings=[("scan", "/lidar")],
     )
 
     rviz = Node(
