@@ -24,7 +24,7 @@ source install/setup.bash
 ros2 launch ros_test gazebo_slam.launch.py
 ```
 
-Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 sends waypoint goals around the floor plan so the robot scans rooms automatically.
+Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 sends nearby map-local goals so the robot scans rooms automatically without driving to coordinates outside the current SLAM map.
 
 The launch starts:
 
@@ -36,7 +36,7 @@ The launch starts:
 - `slam_toolbox`, publishing `/map` from `/scan` and TF
 - RViz
 - `map_monitor`, which reports when `/map` is received
-- Nav2, publishing `/cmd_vel` from waypoint goals
+- Nav2, publishing `/cmd_vel` from nearby free/frontier goals selected from `/map`
 
 ## Manual and Fallback Modes
 
@@ -72,3 +72,5 @@ If the RViz map appears to slide with the robot, make sure RViz Global Options u
 ```
 
 Move the robot for a few seconds before expecting a useful map. The simulated lidar range is 5 m, so the map expands as the robot explores nearby rooms and corridors.
+
+During live SLAM, RViz may briefly show small pose corrections because `slam_toolbox` updates the `map -> odom` transform. The autonomous mode uses slow velocities and disables loop closure to keep those corrections from looking like large jumps while mapping.

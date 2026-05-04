@@ -20,7 +20,7 @@ bt_navigator:
 controller_server:
   ros__parameters:
     use_sim_time: true
-    controller_frequency: 15.0
+    controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -42,25 +42,25 @@ controller_server:
       debug_trajectory_details: false
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.35
+      max_vel_x: 0.18
       max_vel_y: 0.0
-      max_vel_theta: 0.9
+      max_vel_theta: 0.45
       min_speed_xy: 0.0
-      max_speed_xy: 0.35
+      max_speed_xy: 0.18
       min_speed_theta: 0.0
-      acc_lim_x: 0.8
+      acc_lim_x: 0.35
       acc_lim_y: 0.0
-      acc_lim_theta: 1.2
-      decel_lim_x: -0.8
+      acc_lim_theta: 0.7
+      decel_lim_x: -0.35
       decel_lim_y: 0.0
-      decel_lim_theta: -1.2
+      decel_lim_theta: -0.7
       vx_samples: 20
       vy_samples: 1
       vtheta_samples: 20
-      sim_time: 1.5
+      sim_time: 1.2
       linear_granularity: 0.05
       angular_granularity: 0.025
-      transform_tolerance: 0.3
+      transform_tolerance: 1.0
       xy_goal_tolerance: 0.35
       trans_stopped_velocity: 0.05
       short_circuit_trajectory_evaluation: true
@@ -172,11 +172,11 @@ behavior_server:
     use_sim_time: true
     global_frame: odom
     robot_base_frame: base_link
-    transform_tolerance: 0.3
+    transform_tolerance: 1.0
     simulate_ahead_time: 2.0
-    max_rotational_vel: 0.8
+    max_rotational_vel: 0.45
     min_rotational_vel: 0.2
-    rotational_acc_lim: 1.2
+    rotational_acc_lim: 0.7
     behavior_plugins: [spin, backup, drive_on_heading, wait]
     spin:
       plugin: nav2_behaviors::Spin
