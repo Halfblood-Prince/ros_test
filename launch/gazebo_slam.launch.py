@@ -1,6 +1,6 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -13,9 +13,11 @@ def generate_launch_description():
     gui_config = LaunchConfiguration("gui_config")
     gz_args = LaunchConfiguration("gz_args")
     auto_drive_enabled = LaunchConfiguration("auto_drive")
+    mapper = LaunchConfiguration("mapper")
 
     default_world = PathJoinSubstitution([pkg_share, "robot.sdf"])
     default_gui_config = PathJoinSubstitution([pkg_share, "config", "gazebo_teleop.config"])
+    slam_params = PathJoinSubstitution([pkg_share, "config", "slam_toolbox.yaml"])
     rviz_config = PathJoinSubstitution([pkg_share, "rviz", "slam.rviz"])
 
     gazebo = IncludeLaunchDescription(
@@ -63,6 +65,20 @@ def generate_launch_description():
         name="simple_mapper",
         output="screen",
         parameters=[{"use_sim_time": True}],
+        condition=IfCondition(mapper),
+    )
+
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("slam_toolbox"), "launch", "online_async_launch.py"]
+            )
+        ),
+        launch_arguments={
+            "slam_params_file": slam_params,
+            "use_sim_time": "true",
+        }.items(),
+        condition=UnlessCondition(mapper),
     )
 
     rviz = Node(
@@ -113,11 +129,16 @@ def generate_launch_description():
                 default_value="false",
                 description="Set true to make the robot drive itself.",
             ),
+            DeclareLaunchArgument(
+                "mapper",
+                default_value="false",
+                description="Set true to use the simple odom mapper instead of slam_toolbox.",
+            ),
             gazebo,
             bridge,
             odom_to_tf,
             scan_to_chassis,
-            TimerAction(period=2.0, actions=[simple_mapper, map_monitor, auto_drive]),
+            TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
             TimerAction(period=4.0, actions=[rviz]),
         ]
     )

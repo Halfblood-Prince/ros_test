@@ -2,7 +2,7 @@
 <package format="3">
   <name>ros_test</name>
   <version>0.1.0</version>
-  <description>Gazebo Harmonic lidar robot simulation with ROS 2 Jazzy occupancy grid mapping.</description>
+  <description>Gazebo Harmonic lidar robot simulation with ROS 2 Jazzy lidar SLAM mapping.</description>
   <maintainer email="user@example.com">user</maintainer>
   <license>Apache-2.0</license>
 
@@ -17,6 +17,7 @@
   <exec_depend>ros_gz_sim</exec_depend>
   <exec_depend>rviz2</exec_depend>
   <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>slam_toolbox</exec_depend>
   <exec_depend>tf2_ros</exec_depend>
 
   <export>
