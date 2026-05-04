@@ -190,7 +190,7 @@
                     </inertial>
                     <sensor name='gpu_lidar' type='gpu_lidar'>
     <pose relative_to='lidar_frame'>0 0 0 0 0 0</pose>
-    <topic>lidar</topic>
+    <topic>/lidar</topic>
     <gz_frame_id>chassis</gz_frame_id>
     <update_rate>10</update_rate>
     <ray>
@@ -219,7 +219,7 @@
 </sensor>
                     <sensor name='imu_sensor' type='imu'>
                         <pose>0 0 0 0 0 0</pose>
-                        <topic>imu</topic>
+                        <topic>/imu</topic>
                         <gz_frame_id>chassis</gz_frame_id>
                         <update_rate>100</update_rate>
                         <always_on>1</always_on>
@@ -254,7 +254,7 @@
     <right_joint>right_wheel_joint</right_joint>
     <wheel_separation>1.2</wheel_separation>
     <wheel_radius>0.4</wheel_radius>
-    <odom_publish_frequency>1</odom_publish_frequency>
+    <odom_publish_frequency>30</odom_publish_frequency>
     <odom_topic>/odom</odom_topic>
     <tf_topic>/tf</tf_topic>
     <frame_id>odom</frame_id>
