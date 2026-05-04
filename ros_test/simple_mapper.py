@@ -3,6 +3,7 @@ import math
 import rclpy
 from nav_msgs.msg import OccupancyGrid, Odometry
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from sensor_msgs.msg import LaserScan
 
 
@@ -20,7 +21,12 @@ class SimpleMapper(Node):
 
         self.create_subscription(Odometry, "/odom", self._handle_odom, 20)
         self.create_subscription(LaserScan, "/scan", self._handle_scan, 10)
-        self._map_pub = self.create_publisher(OccupancyGrid, "/map", 1)
+        map_qos = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=ReliabilityPolicy.RELIABLE,
+        )
+        self._map_pub = self.create_publisher(OccupancyGrid, "/map", map_qos)
         self.create_timer(1.0, self._publish_map)
 
     def _handle_odom(self, msg):
