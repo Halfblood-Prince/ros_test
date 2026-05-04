@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -76,6 +76,14 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
+    auto_drive = Node(
+        package="ros_test",
+        executable="auto_drive",
+        name="auto_drive",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
     slam_toolbox = Node(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
@@ -109,7 +117,7 @@ def generate_launch_description():
             gazebo,
             bridge,
             odom_to_tf,
-            slam_toolbox,
-            rviz,
+            TimerAction(period=2.0, actions=[slam_toolbox, auto_drive]),
+            TimerAction(period=4.0, actions=[rviz]),
         ]
     )

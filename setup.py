@@ -22,6 +22,7 @@ setup(
     license="Apache-2.0",
     entry_points={
         "console_scripts": [
+            "auto_drive = ros_test.auto_drive:main",
             "odom_to_tf = ros_test.odom_to_tf:main",
         ],
     },
