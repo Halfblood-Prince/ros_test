@@ -92,17 +92,77 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
-    nav2 = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([FindPackageShare("nav2_bringup"), "launch", "navigation_launch.py"])
+    nav2_nodes = [
+        Node(
+            package="nav2_controller",
+            executable="controller_server",
+            name="controller_server",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
         ),
-        launch_arguments={
-            "use_sim_time": "true",
-            "params_file": nav2_params,
-            "autostart": "true",
-        }.items(),
-        condition=IfCondition(nav2_enabled),
-    )
+        Node(
+            package="nav2_smoother",
+            executable="smoother_server",
+            name="smoother_server",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
+            package="nav2_planner",
+            executable="planner_server",
+            name="planner_server",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
+            package="nav2_behaviors",
+            executable="behavior_server",
+            name="behavior_server",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
+            package="nav2_bt_navigator",
+            executable="bt_navigator",
+            name="bt_navigator",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
+            package="nav2_waypoint_follower",
+            executable="waypoint_follower",
+            name="waypoint_follower",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
+            package="nav2_lifecycle_manager",
+            executable="lifecycle_manager",
+            name="lifecycle_manager_navigation",
+            output="screen",
+            parameters=[
+                {
+                    "use_sim_time": True,
+                    "autostart": True,
+                    "node_names": [
+                        "controller_server",
+                        "smoother_server",
+                        "planner_server",
+                        "behavior_server",
+                        "bt_navigator",
+                        "waypoint_follower",
+                    ],
+                }
+            ],
+            condition=IfCondition(nav2_enabled),
+        ),
+    ]
 
     nav2_explorer = Node(
         package="ros_test",
@@ -168,7 +228,7 @@ def generate_launch_description():
             scan_to_chassis,
             TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
             TimerAction(period=8.0, actions=[rviz]),
-            TimerAction(period=12.0, actions=[nav2]),
+            TimerAction(period=12.0, actions=nav2_nodes),
             TimerAction(period=25.0, actions=[nav2_explorer]),
         ]
     )
