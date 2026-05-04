@@ -12,6 +12,7 @@ setup(
         (f"share/{package_name}", ["package.xml", "robot.sdf"]),
         (f"share/{package_name}/launch", glob("launch/*.launch.py")),
         (f"share/{package_name}/config", glob("config/*.yaml")),
+        (f"share/{package_name}/config", glob("config/*.config")),
         (f"share/{package_name}/rviz", glob("rviz/*.rviz")),
     ],
     install_requires=["setuptools"],

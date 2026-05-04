@@ -11,9 +11,13 @@ def generate_launch_description():
     package_share = FindPackageShare("ros_test")
     world = LaunchConfiguration("world")
     gz_args = LaunchConfiguration("gz_args")
+    gui_config = LaunchConfiguration("gui_config")
     auto_drive_enabled = LaunchConfiguration("auto_drive")
 
     default_world = PathJoinSubstitution([package_share, "robot.sdf"])
+    default_gui_config = PathJoinSubstitution(
+        [package_share, "config", "gazebo_teleop.config"]
+    )
     rviz_config = PathJoinSubstitution([package_share, "rviz", "slam.rviz"])
     slam_params = {
         "use_sim_time": True,
@@ -52,7 +56,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
-            "gz_args": [gz_args, " ", world],
+            "gz_args": [gz_args, " ", world, " --gui-config ", gui_config],
         }.items(),
     )
 
@@ -149,6 +153,11 @@ def generate_launch_description():
                 "gz_args",
                 default_value="-r",
                 description="Arguments passed to gz sim before the world path.",
+            ),
+            DeclareLaunchArgument(
+                "gui_config",
+                default_value=default_gui_config,
+                description="Gazebo GUI config that opens the Teleop panel.",
             ),
             DeclareLaunchArgument(
                 "auto_drive",
