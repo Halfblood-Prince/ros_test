@@ -23,6 +23,7 @@ setup(
     entry_points={
         "console_scripts": [
             "auto_drive = ros_test.auto_drive:main",
+            "map_monitor = ros_test.map_monitor:main",
             "odom_to_tf = ros_test.odom_to_tf:main",
         ],
     },

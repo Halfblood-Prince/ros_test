@@ -84,6 +84,14 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
+    map_monitor = Node(
+        package="ros_test",
+        executable="map_monitor",
+        name="map_monitor",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+    )
+
     slam_toolbox = Node(
         package="slam_toolbox",
         executable="async_slam_toolbox_node",
@@ -117,7 +125,7 @@ def generate_launch_description():
             gazebo,
             bridge,
             odom_to_tf,
-            TimerAction(period=2.0, actions=[slam_toolbox, auto_drive]),
+            TimerAction(period=2.0, actions=[slam_toolbox, auto_drive, map_monitor]),
             TimerAction(period=4.0, actions=[rviz]),
         ]
     )
