@@ -139,11 +139,6 @@
       </link>
 
       <!-- Furniture-like obstacles for richer lidar features -->
-      <link name="table_block_a">
-        <pose>-5.4 2.8 0.35 0 0 0.2</pose>
-        <collision name="collision"><geometry><box><size>0.9 0.7 0.7</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.9 0.7 0.7</size></box></geometry><material><ambient>0.7 0.25 0.18 1</ambient><diffuse>0.7 0.25 0.18 1</diffuse></material></visual>
-      </link>
       <link name="table_block_b">
         <pose>1.8 3.6 0.35 0 0 -0.2</pose>
         <collision name="collision"><geometry><box><size>1.1 0.6 0.7</size></box></geometry></collision>
@@ -157,7 +152,7 @@
     </model>
 
     <model name="vehicle_blue" canonical_link="chassis">
-      <pose>-5.6 -3.6 0.12 0 0 1.5708</pose>
+      <pose>-5.4 2.8 0.12 0 0 0</pose>
 
       <link name="chassis">
         <pose relative_to="__model__">0 0 0.38 0 0 0</pose>
@@ -193,6 +188,7 @@
         <sensor name="gpu_lidar" type="gpu_lidar">
           <pose>0.45 0 0.32 0 0 0</pose>
           <topic>/scan</topic>
+          <frame_id>chassis</frame_id>
           <update_rate>15</update_rate>
           <ray>
             <scan>

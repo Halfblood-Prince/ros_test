@@ -74,6 +74,7 @@ def generate_launch_description():
         output="screen",
         parameters=[slam_params, {"use_sim_time": True}],
         remappings=[("scan", "/scan")],
+        arguments=["--ros-args", "--log-level", "slam_toolbox:=debug"],
     )
 
     rviz = Node(
