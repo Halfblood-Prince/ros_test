@@ -65,12 +65,12 @@ class SimpleMapper(Node):
         if not cells:
             return
 
-        free_cells = cells[:-1] if mark_hit else cells
+        free_cells = cells[:-2] if mark_hit and len(cells) > 2 else cells
         for x, y in free_cells:
-            self._add_log_odds(x, y, -0.4)
+            self._add_log_odds(x, y, -0.2)
 
         if mark_hit:
-            self._add_log_odds(cells[-1][0], cells[-1][1], 0.85)
+            self._mark_occupied(cells[-1][0], cells[-1][1])
 
     def _publish_map(self):
         msg = OccupancyGrid()
@@ -96,9 +96,21 @@ class SimpleMapper(Node):
         index = y * self._width + x
         self._log_odds[index] = max(-4.0, min(4.0, self._log_odds[index] + delta))
 
+    def _mark_occupied(self, center_x, center_y):
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                x = center_x + dx
+                y = center_y + dy
+                if 0 <= x < self._width and 0 <= y < self._height:
+                    self._add_log_odds(x, y, 1.6)
+
     @staticmethod
     def _occupancy_value(log_odds):
-        if -0.15 < log_odds < 0.15:
+        if log_odds > 0.6:
+            return 100
+        if log_odds < -0.6:
+            return 0
+        if -0.2 < log_odds < 0.2:
             return -1
         probability = 1.0 - 1.0 / (1.0 + math.exp(log_odds))
         return int(max(0, min(100, round(probability * 100))))
