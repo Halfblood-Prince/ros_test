@@ -26,7 +26,7 @@ class MapMonitor(Node):
         self._seconds_waited += 5
         self.get_logger().warn(
             f"Still waiting for /map after {self._seconds_waited}s. "
-            "Move the robot with the Gazebo Teleop panel or launch with auto_drive:=true."
+            "Move the robot and confirm scan_to_chassis is republishing /scan."
         )
 
 

@@ -35,7 +35,7 @@ def generate_launch_description():
         output="screen",
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "/scan_raw@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
@@ -50,21 +50,12 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
-    lidar_static_tf = Node(
-        package="tf2_ros",
-        executable="static_transform_publisher",
-        name="lidar_static_tf",
+    scan_to_chassis = Node(
+        package="ros_test",
+        executable="scan_to_chassis",
+        name="scan_to_chassis",
         output="screen",
-        arguments=[
-            "--x", "0.45",
-            "--y", "0.0",
-            "--z", "0.32",
-            "--roll", "0.0",
-            "--pitch", "0.0",
-            "--yaw", "0.0",
-            "--frame-id", "chassis",
-            "--child-frame-id", "vehicle_blue/chassis/gpu_lidar",
-        ],
+        parameters=[{"use_sim_time": True}],
     )
 
     slam_toolbox = Node(
@@ -128,7 +119,7 @@ def generate_launch_description():
             gazebo,
             bridge,
             odom_to_tf,
-            lidar_static_tf,
+            scan_to_chassis,
             TimerAction(period=2.0, actions=[slam_toolbox, map_monitor, auto_drive]),
             TimerAction(period=4.0, actions=[rviz]),
         ]

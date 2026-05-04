@@ -30,7 +30,8 @@ The launch starts:
 
 - Gazebo Harmonic world: `robot.sdf`
 - Gazebo Teleop GUI panel
-- ROS-Gazebo bridge for `/clock`, `/scan`, `/imu`, `/odom`, and ROS `/cmd_vel`
+- ROS-Gazebo bridge for `/clock`, `/scan_raw`, `/imu`, `/odom`, and ROS `/cmd_vel`
+- scan republisher from `/scan_raw` to `/scan` with frame `chassis`
 - `odom_to_tf`, publishing `odom -> chassis`
 - static TF `chassis -> vehicle_blue/chassis/gpu_lidar`
 - `slam_toolbox`
@@ -48,7 +49,8 @@ ros2 launch ros_test gazebo_slam.launch.py auto_drive:=true
 ## Expected topics
 
 ```text
-/scan    sensor_msgs/msg/LaserScan
+/scan_raw sensor_msgs/msg/LaserScan from Gazebo
+/scan     sensor_msgs/msg/LaserScan with frame chassis
 /imu     sensor_msgs/msg/Imu
 /odom    nav_msgs/msg/Odometry
 /map     nav_msgs/msg/OccupancyGrid

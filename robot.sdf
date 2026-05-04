@@ -83,59 +83,59 @@
 
       <!-- Interior rooms and corridors -->
       <link name="left_vertical_room_wall">
-        <pose>-3.6 1.6 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 4.4 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 4.4 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>-3.6 2.2 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 3.0 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 3.0 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="left_room_bottom_wall">
-        <pose>-5.2 -1.2 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>3.4 0.18 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>3.4 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>-5.7 -1.2 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>2.3 0.18 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>2.3 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="center_vertical_wall_upper">
-        <pose>0.0 2.6 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 4.2 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 4.2 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>0.0 3.2 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 2.6 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 2.6 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="center_vertical_wall_lower">
-        <pose>0.0 -3.1 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 2.4 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 2.4 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>0.0 -3.6 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 1.6 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 1.6 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="middle_horizontal_wall_left">
-        <pose>-2.2 0.2 0.6 0 0 0</pose>
+        <pose>-2.7 0.2 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>1.6 0.18 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+      </link>
+      <link name="middle_horizontal_wall_right">
+        <pose>4.2 0.2 0.6 0 0 0</pose>
         <collision name="collision"><geometry><box><size>2.6 0.18 1.2</size></box></geometry></collision>
         <visual name="visual"><geometry><box><size>2.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
-      <link name="middle_horizontal_wall_right">
-        <pose>3.4 0.2 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>4.0 0.18 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>4.0 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
-      </link>
       <link name="right_room_wall">
-        <pose>3.0 2.8 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 3.6 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 3.6 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>3.0 3.4 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 2.4 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 2.4 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="right_room_bottom_wall">
-        <pose>4.8 1.1 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>3.6 0.18 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>3.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>5.2 1.1 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>2.6 0.18 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>2.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="bottom_room_wall_left">
-        <pose>-4.2 -3.0 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 3.8 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 3.8 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>-4.2 -3.4 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 2.8 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 2.8 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="bottom_room_wall_right">
-        <pose>3.6 -3.2 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>0.18 3.4 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>0.18 3.4 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>3.6 -3.6 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 2.4 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 2.4 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="bottom_corridor_wall">
-        <pose>1.8 -2.0 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>3.6 0.18 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>3.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+        <pose>2.4 -2.0 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>2.4 0.18 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>2.4 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
 
       <!-- Furniture-like obstacles for richer lidar features -->
@@ -187,8 +187,7 @@
         </visual>
         <sensor name="gpu_lidar" type="gpu_lidar">
           <pose>0.45 0 0.32 0 0 0</pose>
-          <topic>/scan</topic>
-          <frame_id>chassis</frame_id>
+          <topic>/scan_raw</topic>
           <update_rate>15</update_rate>
           <ray>
             <scan>
