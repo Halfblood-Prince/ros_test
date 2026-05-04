@@ -76,6 +76,31 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
+    lidar_static_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="lidar_static_tf",
+        output="screen",
+        arguments=[
+            "--x",
+            "0.8",
+            "--y",
+            "0.0",
+            "--z",
+            "0.5",
+            "--roll",
+            "0.0",
+            "--pitch",
+            "0.0",
+            "--yaw",
+            "0.0",
+            "--frame-id",
+            "chassis",
+            "--child-frame-id",
+            "vehicle_blue/chassis/gpu_lidar",
+        ],
+    )
+
     auto_drive = Node(
         package="ros_test",
         executable="auto_drive",
@@ -125,6 +150,7 @@ def generate_launch_description():
             gazebo,
             bridge,
             odom_to_tf,
+            lidar_static_tf,
             TimerAction(period=2.0, actions=[slam_toolbox, auto_drive, map_monitor]),
             TimerAction(period=4.0, actions=[rviz]),
         ]
