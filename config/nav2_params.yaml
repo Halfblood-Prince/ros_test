@@ -152,7 +152,7 @@ planner_server:
     expected_planner_frequency: 5.0
     planner_plugins: [GridBased]
     GridBased:
-      plugin: nav2_navfn_planner/NavfnPlanner
+      plugin: nav2_navfn_planner::NavfnPlanner
       tolerance: 0.6
       use_astar: false
       allow_unknown: true
@@ -179,13 +179,13 @@ behavior_server:
     rotational_acc_lim: 1.2
     behavior_plugins: [spin, backup, drive_on_heading, wait]
     spin:
-      plugin: nav2_behaviors/Spin
+      plugin: nav2_behaviors::Spin
     backup:
-      plugin: nav2_behaviors/BackUp
+      plugin: nav2_behaviors::BackUp
     drive_on_heading:
-      plugin: nav2_behaviors/DriveOnHeading
+      plugin: nav2_behaviors::DriveOnHeading
     wait:
-      plugin: nav2_behaviors/Wait
+      plugin: nav2_behaviors::Wait
 
 waypoint_follower:
   ros__parameters:
