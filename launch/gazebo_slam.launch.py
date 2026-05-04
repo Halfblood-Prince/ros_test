@@ -36,9 +36,16 @@ def generate_launch_description():
             "/lidar@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
-            "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
         ],
+    )
+
+    odom_to_tf = Node(
+        package="ros_test",
+        executable="odom_to_tf",
+        name="odom_to_tf",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
     )
 
     slam_toolbox = Node(
@@ -75,6 +82,7 @@ def generate_launch_description():
             ),
             gazebo,
             bridge,
+            odom_to_tf,
             slam_toolbox,
             rviz,
         ]

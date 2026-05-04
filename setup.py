@@ -6,7 +6,7 @@ package_name = "ros_test"
 setup(
     name=package_name,
     version="0.0.1",
-    packages=[],
+    packages=[package_name],
     data_files=[
         ("share/ament_index/resource_index/packages", [f"resource/{package_name}"]),
         (f"share/{package_name}", ["package.xml", "robot.sdf"]),
@@ -20,4 +20,9 @@ setup(
     maintainer_email="user@example.com",
     description="Gazebo Harmonic world and ROS 2 Jazzy launch setup for lidar SLAM.",
     license="Apache-2.0",
+    entry_points={
+        "console_scripts": [
+            "odom_to_tf = ros_test.odom_to_tf:main",
+        ],
+    },
 )
