@@ -25,6 +25,7 @@ setup(
         "console_scripts": [
             "auto_drive = ros_test.auto_drive:main",
             "map_monitor = ros_test.map_monitor:main",
+            "nav2_waypoint_explorer = ros_test.nav2_waypoint_explorer:main",
             "odom_to_tf = ros_test.odom_to_tf:main",
             "scan_to_chassis = ros_test.scan_to_chassis:main",
             "simple_mapper = ros_test.simple_mapper:main",

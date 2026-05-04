@@ -6,7 +6,7 @@ This package launches a Gazebo Harmonic simulation of a differential-drive lidar
 
 ```bash
 sudo apt update
-sudo apt install python3-colcon-common-extensions ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-rviz2 ros-jazzy-slam-toolbox ros-jazzy-tf2-ros
+sudo apt install python3-colcon-common-extensions ros-jazzy-nav2-bringup ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-rviz2 ros-jazzy-slam-toolbox ros-jazzy-tf2-ros
 ```
 
 ## Build
@@ -44,6 +44,14 @@ For hands-off mapping:
 ```bash
 ros2 launch ros_test gazebo_slam.launch.py auto_drive:=true
 ```
+
+For Nav2 autonomous scanning with waypoint goals:
+
+```bash
+ros2 launch ros_test gazebo_slam.launch.py nav2:=true
+```
+
+This keeps `slam_toolbox` running and starts Nav2 after a short delay. A small waypoint explorer sends goals around the floor plan so the robot scans more rooms automatically.
 
 For the older odom-only fallback mapper:
 

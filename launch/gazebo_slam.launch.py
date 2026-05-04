@@ -14,10 +14,12 @@ def generate_launch_description():
     gz_args = LaunchConfiguration("gz_args")
     auto_drive_enabled = LaunchConfiguration("auto_drive")
     mapper = LaunchConfiguration("mapper")
+    nav2_enabled = LaunchConfiguration("nav2")
 
     default_world = PathJoinSubstitution([pkg_share, "robot.sdf"])
     default_gui_config = PathJoinSubstitution([pkg_share, "config", "gazebo_teleop.config"])
     slam_params = PathJoinSubstitution([pkg_share, "config", "slam_toolbox.yaml"])
+    nav2_params = PathJoinSubstitution([pkg_share, "config", "nav2_params.yaml"])
     rviz_config = PathJoinSubstitution([pkg_share, "rviz", "slam.rviz"])
 
     gazebo = IncludeLaunchDescription(
@@ -90,6 +92,27 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
+    nav2 = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution([FindPackageShare("nav2_bringup"), "launch", "navigation_launch.py"])
+        ),
+        launch_arguments={
+            "use_sim_time": "true",
+            "params_file": nav2_params,
+            "autostart": "true",
+        }.items(),
+        condition=IfCondition(nav2_enabled),
+    )
+
+    nav2_explorer = Node(
+        package="ros_test",
+        executable="nav2_waypoint_explorer",
+        name="nav2_waypoint_explorer",
+        output="screen",
+        parameters=[{"use_sim_time": True}],
+        condition=IfCondition(nav2_enabled),
+    )
+
     map_monitor = Node(
         package="ros_test",
         executable="map_monitor",
@@ -134,11 +157,18 @@ def generate_launch_description():
                 default_value="false",
                 description="Set true to use the simple odom mapper instead of slam_toolbox.",
             ),
+            DeclareLaunchArgument(
+                "nav2",
+                default_value="false",
+                description="Set true to launch Nav2 and send exploration waypoints.",
+            ),
             gazebo,
             bridge,
             odom_to_tf,
             scan_to_chassis,
             TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
+            TimerAction(period=8.0, actions=[nav2]),
+            TimerAction(period=16.0, actions=[nav2_explorer]),
             TimerAction(period=4.0, actions=[rviz]),
         ]
     )
