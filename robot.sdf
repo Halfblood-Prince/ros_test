@@ -35,7 +35,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>30 30</size>
+              <size>40 32</size>
             </plane>
           </geometry>
         </collision>
@@ -43,7 +43,7 @@
           <geometry>
             <plane>
               <normal>0 0 1</normal>
-              <size>30 30</size>
+              <size>40 32</size>
             </plane>
           </geometry>
           <material>
@@ -60,15 +60,20 @@
       <static>true</static>
 
       <!-- Outer walls -->
-      <link name="north_wall">
-        <pose>0 5 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>14 0.2 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>14 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      <link name="north_wall_left">
+        <pose>-4.5 5 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>5.0 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>5.0 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="north_wall_right">
+        <pose>4.5 5 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>5.0 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>5.0 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
       </link>
       <link name="south_wall">
-        <pose>0 -5 0.6 0 0 0</pose>
-        <collision name="collision"><geometry><box><size>14 0.2 1.2</size></box></geometry></collision>
-        <visual name="visual"><geometry><box><size>14 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+        <pose>2 -5 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>18 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>18 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
       </link>
       <link name="west_wall">
         <pose>-7 0 0.6 0 0 0</pose>
@@ -76,9 +81,34 @@
         <visual name="visual"><geometry><box><size>0.2 10 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
       </link>
       <link name="east_wall">
-        <pose>7 0 0.6 0 0 0</pose>
+        <pose>11 0 0.6 0 0 0</pose>
         <collision name="collision"><geometry><box><size>0.2 10 1.2</size></box></geometry></collision>
         <visual name="visual"><geometry><box><size>0.2 10 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="north_extension_west_wall">
+        <pose>-2.0 8.0 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 6.0 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 6.0 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="north_extension_east_wall">
+        <pose>2.0 8.0 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.2 6.0 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.2 6.0 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="north_extension_top_wall">
+        <pose>0 11 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>4.2 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>4.2 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="east_wing_top_wall">
+        <pose>9 2.8 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>4.0 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>4.0 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
+      </link>
+      <link name="east_wing_bottom_wall">
+        <pose>9 -2.8 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>4.0 0.2 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>4.0 0.2 1.2</size></box></geometry><material><ambient>0.35 0.35 0.35 1</ambient><diffuse>0.35 0.35 0.35 1</diffuse></material></visual>
       </link>
 
       <!-- Interior rooms and corridors -->
@@ -121,6 +151,21 @@
         <pose>5.2 1.1 0.6 0 0 0</pose>
         <collision name="collision"><geometry><box><size>2.6 0.18 1.2</size></box></geometry></collision>
         <visual name="visual"><geometry><box><size>2.6 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+      </link>
+      <link name="east_wing_divider_top">
+        <pose>8.4 1.4 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 2.8 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 2.8 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+      </link>
+      <link name="east_wing_divider_bottom">
+        <pose>8.4 -1.9 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.18 1.8 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.18 1.8 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
+      </link>
+      <link name="north_extension_room_wall">
+        <pose>0 8.3 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>2.0 0.18 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>2.0 0.18 1.2</size></box></geometry><material><ambient>0.42 0.42 0.42 1</ambient><diffuse>0.42 0.42 0.42 1</diffuse></material></visual>
       </link>
       <link name="bottom_room_wall_left">
         <pose>-4.2 -3.4 0.6 0 0 0</pose>
@@ -200,7 +245,7 @@
             </scan>
             <range>
               <min>0.08</min>
-              <max>12.0</max>
+              <max>5.0</max>
               <resolution>0.01</resolution>
             </range>
           </ray>

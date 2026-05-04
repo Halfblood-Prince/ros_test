@@ -11,10 +11,10 @@ class SimpleMapper(Node):
     def __init__(self):
         super().__init__("simple_mapper")
         self._resolution = 0.05
-        self._width = 400
-        self._height = 400
-        self._origin_x = -10.0
-        self._origin_y = -10.0
+        self._width = 600
+        self._height = 560
+        self._origin_x = -12.0
+        self._origin_y = -8.0
         self._log_odds = [0.0] * (self._width * self._height)
         self._odom = None
         self._got_scan = False

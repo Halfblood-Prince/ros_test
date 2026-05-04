@@ -1,6 +1,6 @@
 # ROS 2 Jazzy Gazebo Lidar SLAM Simulation
 
-This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside a building-like floor plan, bridges the simulated sensor data into ROS 2, builds an occupancy grid, and opens RViz.
+This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside an extended building-like floor plan, bridges the simulated sensor data into ROS 2, builds an occupancy grid, and opens RViz.
 
 ## Install dependencies
 
@@ -56,4 +56,4 @@ ros2 launch ros_test gazebo_slam.launch.py auto_drive:=true
 /cmd_vel geometry_msgs/msg/Twist
 ```
 
-Move the robot for a few seconds before expecting a useful map. The mapper needs lidar scans plus motion through the building.
+Move the robot for a few seconds before expecting a useful map. The simulated lidar range is 5 m, so the map expands as the robot explores nearby rooms and corridors.
