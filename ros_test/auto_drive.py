@@ -31,21 +31,21 @@ class AutoDrive(Node):
         left = self._sector_min(0.35, 1.2)
         right = self._sector_min(-1.2, -0.35)
 
-        if front < 0.9:
+        if front < 0.75:
             cmd.linear.x = 0.0
             cmd.angular.z = -0.8 if left < right else 0.8
         else:
-            cmd.linear.x = 0.35
-            cmd.angular.z = 0.25
+            cmd.linear.x = 0.25
+            cmd.angular.z = 0.18
 
         self._cmd_pub.publish(cmd)
 
     def _sector_min(self, start_angle, end_angle):
         ranges = []
         angle = self._scan.angle_min
-        for range_value in self._scan.ranges:
-            if start_angle <= angle <= end_angle and math.isfinite(range_value):
-                ranges.append(range_value)
+        for value in self._scan.ranges:
+            if start_angle <= angle <= end_angle and math.isfinite(value):
+                ranges.append(value)
             angle += self._scan.angle_increment
         return min(ranges) if ranges else float("inf")
 

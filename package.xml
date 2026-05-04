@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <package format="3">
   <name>ros_test</name>
-  <version>0.0.1</version>
-  <description>Gazebo Harmonic world and ROS 2 Jazzy launch setup for lidar SLAM.</description>
+  <version>0.1.0</version>
+  <description>Gazebo Harmonic lidar robot simulation with ROS 2 Jazzy SLAM Toolbox mapping.</description>
   <maintainer email="user@example.com">user</maintainer>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_python</buildtool_depend>
 
+  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>geometry_msgs</exec_depend>
   <exec_depend>nav_msgs</exec_depend>
   <exec_depend>rclpy</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>

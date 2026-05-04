@@ -14,7 +14,6 @@ class MapMonitor(Node):
     def _handle_map(self, msg):
         if self._received_map:
             return
-
         self._received_map = True
         self.get_logger().info(
             "Received /map from slam_toolbox "
@@ -24,11 +23,10 @@ class MapMonitor(Node):
     def _report_status(self):
         if self._received_map:
             return
-
         self._seconds_waited += 5
         self.get_logger().warn(
             f"Still waiting for /map after {self._seconds_waited}s. "
-            "Lidar, odom, and auto-drive may be running before slam_toolbox publishes."
+            "Move the robot with the Gazebo Teleop panel or launch with auto_drive:=true."
         )
 
 
