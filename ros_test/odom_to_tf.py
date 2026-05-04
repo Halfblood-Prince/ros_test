@@ -16,7 +16,7 @@ class OdomToTf(Node):
         transform = TransformStamped()
         transform.header.stamp = msg.header.stamp
         transform.header.frame_id = "odom"
-        transform.child_frame_id = "chassis"
+        transform.child_frame_id = "base_link"
         transform.transform.translation.x = msg.pose.pose.position.x
         transform.transform.translation.y = msg.pose.pose.position.y
         transform.transform.translation.z = msg.pose.pose.position.z
@@ -25,7 +25,7 @@ class OdomToTf(Node):
 
         if not self._logged_first_odom:
             self.get_logger().info(
-                "Publishing TF odom -> chassis from /odom "
+                "Publishing TF odom -> base_link from /odom "
                 f"(source frames: {msg.header.frame_id!r} -> {msg.child_frame_id!r})"
             )
             self._logged_first_odom = True

@@ -11,11 +11,11 @@ class ScanToChassis(Node):
         self.create_subscription(LaserScan, "/scan_raw", self._handle_scan, 10)
 
     def _handle_scan(self, msg):
-        msg.header.frame_id = "chassis"
+        msg.header.frame_id = "base_link"
         self._publisher.publish(msg)
 
         if not self._logged_first_scan:
-            self.get_logger().info("Republishing /scan_raw as /scan with frame_id 'chassis'")
+            self.get_logger().info("Republishing /scan_raw as /scan with frame_id 'base_link'")
             self._logged_first_scan = True
 
 
