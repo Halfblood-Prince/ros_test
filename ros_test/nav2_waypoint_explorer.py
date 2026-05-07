@@ -1,9 +1,13 @@
 import math
+import os
+import time
 
 import rclpy
+from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid
 from nav2_msgs.action import NavigateToPose
+from nav2_msgs.srv import SaveMap
 from rclpy.action import ActionClient
 from rclpy.node import Node
 from rclpy.time import Time
@@ -13,25 +17,40 @@ from tf2_ros import Buffer, TransformException, TransformListener
 class Nav2WaypointExplorer(Node):
     def __init__(self):
         super().__init__("nav2_waypoint_explorer")
+        self.declare_parameter("map_save_path", "maps/complete_environment")
+        self.declare_parameter("min_exploration_goals", 10)
+        self.declare_parameter("frontier_timeout_sec", 45.0)
+        self.declare_parameter("loop_closure_settle_sec", 8.0)
+        self.declare_parameter("return_to_start", True)
+
         self._client = ActionClient(self, NavigateToPose, "navigate_to_pose")
+        self._save_map = self.create_client(SaveMap, "map_saver/save_map")
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
+
         self._map = None
+        self._state = "exploring"
         self._active = False
         self._goal_count = 0
         self._current_goal = None
         self._failed_goals = []
+        self._visited_goals = []
+        self._start_pose = None
+        self._last_frontier_time = time.monotonic()
+        self._settle_started_at = None
+        self._save_requested = False
+
         self.create_subscription(OccupancyGrid, "/map", self._handle_map, 10)
-        self.create_timer(3.0, self._maybe_send_goal)
+        self.create_timer(2.0, self._tick)
 
     def _handle_map(self, msg):
         self._map = msg
 
-    def _maybe_send_goal(self):
-        if self._active:
+    def _tick(self):
+        if self._state == "complete" or self._active:
             return
         if self._map is None:
-            self.get_logger().info("Waiting for /map before choosing Nav2 exploration goals")
+            self.get_logger().info("Waiting for /map before autonomous frontier exploration")
             return
         if not self._client.wait_for_server(timeout_sec=0.1):
             self.get_logger().info("Waiting for Nav2 navigate_to_pose action server")
@@ -40,25 +59,109 @@ class Nav2WaypointExplorer(Node):
         robot = self._robot_pose()
         if robot is None:
             return
+        if self._start_pose is None:
+            self._start_pose = robot
+            self.get_logger().info(
+                f"Recorded SLAM start pose at x={robot[0]:.2f}, y={robot[1]:.2f}"
+            )
 
+        if self._state == "exploring":
+            self._continue_exploration(robot)
+        elif self._state == "returning":
+            self._send_return_goal(robot)
+        elif self._state == "settling":
+            self._wait_then_save()
+        elif self._state == "saving":
+            self._request_map_save()
+
+    def _continue_exploration(self, robot):
         target = self._choose_frontier_goal(robot)
-        if target is None:
-            self.get_logger().info("No safe nearby free/frontier cell found yet; waiting for map growth")
+        if target is not None:
+            self._last_frontier_time = time.monotonic()
+            self._send_goal(target, robot, "frontier")
             return
 
-        x, y = target
-        yaw = math.atan2(y - robot[1], x - robot[0])
-        goal = NavigateToPose.Goal()
-        goal.pose = self._make_pose(x, y, yaw)
-        self._goal_count += 1
-        self.get_logger().info(
-            f"Sending Nav2 map-local exploration goal {self._goal_count}: "
-            f"x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}"
-        )
-        self._active = True
-        self._current_goal = (x, y)
-        future = self._client.send_goal_async(goal)
-        future.add_done_callback(self._goal_response_callback)
+        elapsed = time.monotonic() - self._last_frontier_time
+        min_goals = self.get_parameter("min_exploration_goals").value
+        timeout = self.get_parameter("frontier_timeout_sec").value
+        if self._goal_count < min_goals or elapsed < timeout:
+            self.get_logger().info(
+                "No reachable frontier goal right now; waiting for map updates "
+                f"({self._goal_count}/{min_goals} goals, {elapsed:.0f}/{timeout:.0f}s quiet)"
+            )
+            return
+
+        if self.get_parameter("return_to_start").value:
+            self.get_logger().info(
+                "No frontiers remain; returning near the start pose so slam_toolbox can close the loop"
+            )
+            self._state = "returning"
+        else:
+            self.get_logger().info("No frontiers remain; saving the completed map")
+            self._state = "saving"
+
+    def _send_return_goal(self, robot):
+        if self._start_pose is None:
+            self._state = "saving"
+            return
+        if math.hypot(robot[0] - self._start_pose[0], robot[1] - self._start_pose[1]) < 0.75:
+            self.get_logger().info("Robot is back near the start pose; waiting for SLAM to settle")
+            self._state = "settling"
+            self._settle_started_at = time.monotonic()
+            return
+        self._send_goal(self._start_pose, robot, "loop-closure return")
+
+    def _wait_then_save(self):
+        settle = self.get_parameter("loop_closure_settle_sec").value
+        if self._settle_started_at is None:
+            self._settle_started_at = time.monotonic()
+        if time.monotonic() - self._settle_started_at < settle:
+            return
+        self.get_logger().info("SLAM settle period complete; saving map and leaving Nav2 ready")
+        self._state = "saving"
+
+    def _request_map_save(self):
+        if self._save_requested:
+            return
+        if not self._save_map.wait_for_service(timeout_sec=0.1):
+            self.get_logger().info("Waiting for map_saver/save_map service")
+            return
+
+        map_url = self.get_parameter("map_save_path").value
+        directory = os.path.dirname(map_url)
+        if directory:
+            os.makedirs(directory, exist_ok=True)
+
+        request = SaveMap.Request()
+        request.map_topic = "/map"
+        request.map_url = map_url
+        request.image_format = "pgm"
+        request.map_mode = "trinary"
+        request.free_thresh = 0.25
+        request.occupied_thresh = 0.65
+
+        self._save_requested = True
+        future = self._save_map.call_async(request)
+        future.add_done_callback(self._map_saved)
+
+    def _map_saved(self, future):
+        try:
+            response = future.result()
+        except Exception as exc:
+            self.get_logger().error(f"Map save failed: {exc}")
+            self._save_requested = False
+            return
+
+        if response.result:
+            path = self.get_parameter("map_save_path").value
+            self.get_logger().info(
+                f"Saved completed map to {path}.yaml/.pgm. "
+                "Exploration is stopped; Nav2 remains active for pathfinding goals."
+            )
+            self._state = "complete"
+        else:
+            self.get_logger().error("map_saver reported failure; will retry")
+            self._save_requested = False
 
     def _robot_pose(self):
         try:
@@ -73,40 +176,45 @@ class Nav2WaypointExplorer(Node):
         )
 
     def _choose_frontier_goal(self, robot):
+        grid = self._map
+        resolution = grid.info.resolution
+        step = max(1, int(0.25 / resolution))
         best = None
         best_score = -1.0
-        radii = (0.9, 1.2, 1.5, 1.8, 2.1)
-        angle_steps = 24
 
-        for radius in radii:
-            for step in range(angle_steps):
-                angle = 2.0 * math.pi * step / angle_steps
-                x = robot[0] + radius * math.cos(angle)
-                y = robot[1] + radius * math.sin(angle)
-                cell = self._world_to_cell(x, y)
-                if cell is None or not self._is_safe_free_cell(*cell):
-                    continue
-                if self._recently_failed(x, y):
+        for my in range(0, grid.info.height, step):
+            for mx in range(0, grid.info.width, step):
+                if not self._is_safe_free_cell(mx, my):
                     continue
 
-                frontier_score = self._unknown_neighbor_count(*cell)
-                distance_score = radius * 0.2
-                score = frontier_score + distance_score
+                x, y = self._cell_to_world(mx, my)
+                robot_distance = math.hypot(x - robot[0], y - robot[1])
+                if robot_distance < 1.0 or robot_distance > 14.0:
+                    continue
+                if self._recently_seen(x, y):
+                    continue
+
+                unknown = self._unknown_neighbor_count(mx, my, 1.0)
+                if unknown < 8:
+                    continue
+
+                start_bonus = 0.0
+                if self._start_pose is not None:
+                    start_bonus = 0.1 * math.hypot(x - self._start_pose[0], y - self._start_pose[1])
+                score = unknown + min(robot_distance, 8.0) * 0.35 + start_bonus
                 if score > best_score:
                     best = (x, y)
                     best_score = score
 
         return best
 
-    def _world_to_cell(self, x, y):
+    def _cell_to_world(self, mx, my):
         grid = self._map
-        resolution = grid.info.resolution
         origin = grid.info.origin.position
-        mx = int((x - origin.x) / resolution)
-        my = int((y - origin.y) / resolution)
-        if mx < 0 or my < 0 or mx >= grid.info.width or my >= grid.info.height:
-            return None
-        return mx, my
+        return (
+            origin.x + (mx + 0.5) * grid.info.resolution,
+            origin.y + (my + 0.5) * grid.info.resolution,
+        )
 
     def _cell_value(self, mx, my):
         return self._map.data[my * self._map.info.width + mx]
@@ -125,9 +233,9 @@ class Nav2WaypointExplorer(Node):
                     return False
         return True
 
-    def _unknown_neighbor_count(self, mx, my):
+    def _unknown_neighbor_count(self, mx, my, radius_m):
         grid = self._map
-        radius = max(4, int(0.7 / grid.info.resolution))
+        radius = max(2, int(radius_m / grid.info.resolution))
         count = 0
         for dy in range(-radius, radius + 1):
             for dx in range(-radius, radius + 1):
@@ -139,13 +247,28 @@ class Nav2WaypointExplorer(Node):
                     count += 1
         return count
 
-    def _recently_failed(self, x, y):
-        return any(math.hypot(x - fx, y - fy) < 0.5 for fx, fy in self._failed_goals[-12:])
+    def _recently_seen(self, x, y):
+        recent = self._failed_goals[-30:] + self._visited_goals[-50:]
+        return any(math.hypot(x - px, y - py) < 0.9 for px, py in recent)
+
+    def _send_goal(self, target, robot, label):
+        x, y = target
+        yaw = math.atan2(y - robot[1], x - robot[0])
+        goal = NavigateToPose.Goal()
+        goal.pose = self._make_pose(x, y, yaw)
+        self._goal_count += 1
+        self.get_logger().info(
+            f"Sending Nav2 {label} goal {self._goal_count}: x={x:.2f}, y={y:.2f}, yaw={yaw:.2f}"
+        )
+        self._active = True
+        self._current_goal = (x, y)
+        future = self._client.send_goal_async(goal)
+        future.add_done_callback(self._goal_response_callback)
 
     def _goal_response_callback(self, future):
         goal_handle = future.result()
         if not goal_handle.accepted:
-            self.get_logger().warn("Nav2 goal rejected; choosing a new map-local goal")
+            self.get_logger().warn("Nav2 goal rejected; choosing a new goal")
             if self._current_goal is not None:
                 self._failed_goals.append(self._current_goal)
             self._current_goal = None
@@ -159,8 +282,15 @@ class Nav2WaypointExplorer(Node):
         result = future.result()
         status = result.status
         self.get_logger().info(f"Nav2 goal finished with status {status}")
-        if status != 4 and self._current_goal is not None:
+        if status == GoalStatus.STATUS_SUCCEEDED:
+            if self._current_goal is not None:
+                self._visited_goals.append(self._current_goal)
+        elif self._current_goal is not None:
             self._failed_goals.append(self._current_goal)
+
+        if self._state == "returning":
+            self._state = "settling"
+            self._settle_started_at = time.monotonic()
         self._current_goal = None
         self._active = False
 

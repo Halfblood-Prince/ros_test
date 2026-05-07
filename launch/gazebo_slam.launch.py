@@ -142,6 +142,14 @@ def generate_launch_description():
             condition=IfCondition(nav2_enabled),
         ),
         Node(
+            package="nav2_map_server",
+            executable="map_saver_server",
+            name="map_saver",
+            output="screen",
+            parameters=[nav2_params],
+            condition=IfCondition(nav2_enabled),
+        ),
+        Node(
             package="nav2_lifecycle_manager",
             executable="lifecycle_manager",
             name="lifecycle_manager_navigation",
@@ -157,6 +165,7 @@ def generate_launch_description():
                         "behavior_server",
                         "bt_navigator",
                         "waypoint_follower",
+                        "map_saver",
                     ],
                 }
             ],
@@ -169,7 +178,15 @@ def generate_launch_description():
         executable="nav2_waypoint_explorer",
         name="nav2_waypoint_explorer",
         output="screen",
-        parameters=[{"use_sim_time": True}],
+        parameters=[
+            {
+                "use_sim_time": True,
+                "map_save_path": "maps/complete_environment",
+                "min_exploration_goals": 10,
+                "frontier_timeout_sec": 45.0,
+                "return_to_start": True,
+            }
+        ],
         condition=IfCondition(nav2_enabled),
     )
 

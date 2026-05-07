@@ -55,6 +55,32 @@
       </link>
     </model>
 
+    <!-- Perimeter wall enclosing the full environment. -->
+    <model name="environment_perimeter_wall">
+      <static>true</static>
+
+      <link name="perimeter_north_wall">
+        <pose>0 15.85 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>40.0 0.3 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>40.0 0.3 1.5</size></box></geometry><material><ambient>0.25 0.27 0.28 1</ambient><diffuse>0.25 0.27 0.28 1</diffuse></material></visual>
+      </link>
+      <link name="perimeter_south_wall">
+        <pose>0 -15.85 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>40.0 0.3 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>40.0 0.3 1.5</size></box></geometry><material><ambient>0.25 0.27 0.28 1</ambient><diffuse>0.25 0.27 0.28 1</diffuse></material></visual>
+      </link>
+      <link name="perimeter_west_wall">
+        <pose>-19.85 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.3 32.0 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.3 32.0 1.5</size></box></geometry><material><ambient>0.25 0.27 0.28 1</ambient><diffuse>0.25 0.27 0.28 1</diffuse></material></visual>
+      </link>
+      <link name="perimeter_east_wall">
+        <pose>19.85 0 0.75 0 0 0</pose>
+        <collision name="collision"><geometry><box><size>0.3 32.0 1.5</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.3 32.0 1.5</size></box></geometry><material><ambient>0.25 0.27 0.28 1</ambient><diffuse>0.25 0.27 0.28 1</diffuse></material></visual>
+      </link>
+    </model>
+
     <!-- Building-like 2D floor plan for lidar SLAM. Each wall is a static box. -->
     <model name="building_floor_plan">
       <static>true</static>

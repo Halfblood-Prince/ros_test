@@ -24,7 +24,7 @@ source install/setup.bash
 ros2 launch ros_test gazebo_slam.launch.py
 ```
 
-Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 sends nearby map-local goals so the robot scans rooms automatically without driving to coordinates outside the current SLAM map.
+Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 autonomously explores reachable frontiers in the SLAM map. When no reachable frontiers remain, the robot returns near its start pose to give `slam_toolbox` a loop-closure opportunity, waits for the graph to settle, saves the map, and then stops exploration so Nav2 is ready for normal pathfinding goals.
 
 The launch starts:
 
@@ -36,7 +36,8 @@ The launch starts:
 - `slam_toolbox`, publishing `/map` from `/scan` and TF
 - RViz
 - `map_monitor`, which reports when `/map` is received
-- Nav2, publishing `/cmd_vel` from nearby free/frontier goals selected from `/map`
+- Nav2 navigation servers, costmaps, behavior tree navigator, waypoint follower, and map saver
+- `nav2_waypoint_explorer`, which selects frontier goals from the full occupancy grid and saves the completed map to `maps/complete_environment.yaml` and `maps/complete_environment.pgm`
 
 ## Manual and Fallback Modes
 
@@ -73,4 +74,4 @@ If the RViz map appears to slide with the robot, make sure RViz Global Options u
 
 Move the robot for a few seconds before expecting a useful map. The simulated lidar range is 5 m, so the map expands as the robot explores nearby rooms and corridors.
 
-During live SLAM, RViz may briefly show small pose corrections because `slam_toolbox` updates the `map -> odom` transform. The autonomous mode uses slow velocities and disables loop closure to keep those corrections from looking like large jumps while mapping.
+During live SLAM, RViz may briefly show pose corrections because `slam_toolbox` updates the `map -> odom` transform. Loop closure is enabled, and the explorer deliberately returns near the start pose before saving so the final map is optimized before pathfinding use.
