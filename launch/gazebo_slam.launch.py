@@ -2,7 +2,7 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -15,6 +15,7 @@ def generate_launch_description():
     auto_drive_enabled = LaunchConfiguration("auto_drive")
     mapper = LaunchConfiguration("mapper")
     nav2_enabled = LaunchConfiguration("nav2")
+    explore_enabled = LaunchConfiguration("explore")
 
     default_world = PathJoinSubstitution([pkg_share, "robot.sdf"])
     default_gui_config = PathJoinSubstitution([pkg_share, "config", "gazebo_teleop.config"])
@@ -184,10 +185,13 @@ def generate_launch_description():
                 "map_save_path": "maps/complete_environment",
                 "min_exploration_goals": 10,
                 "frontier_timeout_sec": 45.0,
+                "initial_scan_sec": 10.0,
                 "return_to_start": True,
             }
         ],
-        condition=IfCondition(nav2_enabled),
+        condition=IfCondition(
+            PythonExpression(["'", nav2_enabled, "' == 'true' and '", explore_enabled, "' == 'true'"])
+        ),
     )
 
     map_monitor = Node(
@@ -237,7 +241,12 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "nav2",
                 default_value="true",
-                description="Set false to disable Nav2 autonomous waypoint scanning.",
+                description="Set false to disable the Nav2 navigation stack.",
+            ),
+            DeclareLaunchArgument(
+                "explore",
+                default_value="true",
+                description="Set false to keep Nav2 ready but disable autonomous exploration.",
             ),
             gazebo,
             bridge,

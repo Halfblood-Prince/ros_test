@@ -47,6 +47,12 @@ To disable Nav2 and drive only from the Gazebo Teleop panel:
 ros2 launch ros_test gazebo_slam.launch.py nav2:=false
 ```
 
+To keep Nav2 running but prevent autonomous exploration while you drive manually:
+
+```bash
+ros2 launch ros_test gazebo_slam.launch.py explore:=false
+```
+
 For the simple wall-following driver instead of Nav2:
 
 ```bash

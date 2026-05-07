@@ -4,7 +4,7 @@ import time
 
 import rclpy
 from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from nav_msgs.msg import OccupancyGrid
 from nav2_msgs.action import NavigateToPose
 from nav2_msgs.srv import SaveMap
@@ -20,11 +20,13 @@ class Nav2WaypointExplorer(Node):
         self.declare_parameter("map_save_path", "maps/complete_environment")
         self.declare_parameter("min_exploration_goals", 10)
         self.declare_parameter("frontier_timeout_sec", 45.0)
+        self.declare_parameter("initial_scan_sec", 10.0)
         self.declare_parameter("loop_closure_settle_sec", 8.0)
         self.declare_parameter("return_to_start", True)
 
         self._client = ActionClient(self, NavigateToPose, "navigate_to_pose")
         self._save_map = self.create_client(SaveMap, "map_saver/save_map")
+        self._cmd_pub = self.create_publisher(Twist, "/cmd_vel", 10)
         self._tf_buffer = Buffer()
         self._tf_listener = TransformListener(self._tf_buffer, self)
 
@@ -36,6 +38,7 @@ class Nav2WaypointExplorer(Node):
         self._failed_goals = []
         self._visited_goals = []
         self._start_pose = None
+        self._start_time = time.monotonic()
         self._last_frontier_time = time.monotonic()
         self._settle_started_at = None
         self._save_requested = False
@@ -75,8 +78,18 @@ class Nav2WaypointExplorer(Node):
             self._request_map_save()
 
     def _continue_exploration(self, robot):
+        known_free = self._known_free_cell_count()
+        initial_scan_sec = self.get_parameter("initial_scan_sec").value
+        if self._goal_count == 0 and time.monotonic() - self._start_time < initial_scan_sec:
+            self._publish_initial_scan_turn()
+            self.get_logger().info(
+                f"Building the initial SLAM bubble before frontier navigation ({known_free} free cells)"
+            )
+            return
+
         target = self._choose_frontier_goal(robot)
         if target is not None:
+            self._publish_stop()
             self._last_frontier_time = time.monotonic()
             self._send_goal(target, robot, "frontier")
             return
@@ -85,12 +98,16 @@ class Nav2WaypointExplorer(Node):
         min_goals = self.get_parameter("min_exploration_goals").value
         timeout = self.get_parameter("frontier_timeout_sec").value
         if self._goal_count < min_goals or elapsed < timeout:
+            if self._goal_count == 0 and known_free < 250:
+                self._publish_initial_scan_turn()
             self.get_logger().info(
-                "No reachable frontier goal right now; waiting for map updates "
-                f"({self._goal_count}/{min_goals} goals, {elapsed:.0f}/{timeout:.0f}s quiet)"
+                "No reachable frontier goal yet; waiting for more known free space "
+                f"({known_free} free cells, {self._goal_count}/{min_goals} goals, "
+                f"{elapsed:.0f}/{timeout:.0f}s quiet)"
             )
             return
 
+        self._publish_stop()
         if self.get_parameter("return_to_start").value:
             self.get_logger().info(
                 "No frontiers remain; returning near the start pose so slam_toolbox can close the loop"
@@ -174,6 +191,19 @@ class Nav2WaypointExplorer(Node):
             transform.transform.translation.x,
             transform.transform.translation.y,
         )
+
+    def _known_free_cell_count(self):
+        if self._map is None:
+            return 0
+        return sum(1 for value in self._map.data if 0 <= value < 50)
+
+    def _publish_initial_scan_turn(self):
+        cmd = Twist()
+        cmd.angular.z = 0.28
+        self._cmd_pub.publish(cmd)
+
+    def _publish_stop(self):
+        self._cmd_pub.publish(Twist())
 
     def _choose_frontier_goal(self, robot):
         grid = self._map
