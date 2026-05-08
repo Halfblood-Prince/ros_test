@@ -11,6 +11,7 @@ from nav2_msgs.action import NavigateToPose
 from nav2_msgs.srv import SaveMap
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -18,6 +19,7 @@ from tf2_ros import Buffer, TransformException, TransformListener
 class Nav2WaypointExplorer(Node):
     def __init__(self):
         super().__init__("nav2_waypoint_explorer")
+        self.declare_parameter("map_topic", "/map_valid")
         self.declare_parameter("map_save_path", "maps/complete_environment")
         self.declare_parameter("min_exploration_goals", 10)
         self.declare_parameter("frontier_timeout_sec", 45.0)
@@ -50,7 +52,13 @@ class Nav2WaypointExplorer(Node):
         self._settle_started_at = None
         self._save_requested = False
 
-        self.create_subscription(OccupancyGrid, "/map", self._handle_map, 10)
+        map_topic = self.get_parameter("map_topic").value
+        map_qos = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=ReliabilityPolicy.RELIABLE,
+        )
+        self.create_subscription(OccupancyGrid, map_topic, self._handle_map, map_qos)
         self.create_timer(2.0, self._tick)
 
     def _handle_map(self, msg):
@@ -60,7 +68,10 @@ class Nav2WaypointExplorer(Node):
         if self._state == "complete" or self._active:
             return
         if self._map is None:
-            self.get_logger().info("Waiting for /map before autonomous frontier exploration")
+            map_topic = self.get_parameter("map_topic").value
+            self.get_logger().info(
+                f"Waiting for {map_topic} before autonomous frontier exploration"
+            )
             return
         if not self._client.wait_for_server(timeout_sec=0.1):
             self.get_logger().info("Waiting for Nav2 navigate_to_pose action server")
@@ -157,7 +168,7 @@ class Nav2WaypointExplorer(Node):
             os.makedirs(directory, exist_ok=True)
 
         request = SaveMap.Request()
-        request.map_topic = "/map"
+        request.map_topic = self.get_parameter("map_topic").value
         request.map_url = map_url
         request.image_format = "pgm"
         request.map_mode = "trinary"

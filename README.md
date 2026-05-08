@@ -35,6 +35,7 @@ The launch starts:
 - static TF from `base_link` to `lidar_link`, matching the lidar pose in `robot.sdf`
 - `odom_to_tf`, publishing `odom -> base_link`
 - `slam_toolbox`, publishing `/map` from `/scan` and TF
+- `map_filter`, republishing only non-empty SLAM maps as `/map_valid`
 - RViz
 - `map_monitor`, which reports when `/map` is received
 - Nav2 navigation servers, costmaps, behavior tree navigator, waypoint follower, and map saver
@@ -76,6 +77,7 @@ If the RViz map appears to slide with the robot, make sure RViz Global Options u
 /imu     sensor_msgs/msg/Imu
 /odom    nav_msgs/msg/Odometry
 /map     nav_msgs/msg/OccupancyGrid
+/map_valid nav_msgs/msg/OccupancyGrid with empty startup maps filtered out
 /cmd_vel geometry_msgs/msg/Twist
 ```
 

@@ -110,6 +110,20 @@ def generate_launch_description():
         condition=UnlessCondition(mapper),
     )
 
+    map_filter = Node(
+        package="ros_test",
+        executable="map_filter",
+        name="map_filter",
+        output="screen",
+        parameters=[
+            {
+                "use_sim_time": True,
+                "input_topic": "/map",
+                "output_topic": "/map_valid",
+            }
+        ],
+    )
+
     rviz = Node(
         package="rviz2",
         executable="rviz2",
@@ -208,6 +222,7 @@ def generate_launch_description():
         parameters=[
             {
                 "use_sim_time": True,
+                "map_topic": "/map_valid",
                 "map_save_path": "maps/complete_environment",
                 "min_exploration_goals": 10,
                 "frontier_timeout_sec": 45.0,
@@ -229,7 +244,7 @@ def generate_launch_description():
         executable="map_monitor",
         name="map_monitor",
         output="screen",
-        parameters=[{"use_sim_time": True}],
+        parameters=[{"use_sim_time": True, "map_topic": "/map_valid"}],
     )
 
     auto_drive = Node(
@@ -283,7 +298,10 @@ def generate_launch_description():
             odom_to_tf,
             scan_to_chassis,
             lidar_static_tf,
-            TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
+            TimerAction(
+                period=2.0,
+                actions=[slam_toolbox, simple_mapper, map_filter, map_monitor, auto_drive],
+            ),
             TimerAction(period=8.0, actions=[rviz]),
             TimerAction(period=12.0, actions=nav2_nodes),
             TimerAction(period=25.0, actions=[nav2_explorer]),
