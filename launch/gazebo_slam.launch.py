@@ -62,6 +62,32 @@ def generate_launch_description():
         parameters=[{"use_sim_time": True}],
     )
 
+    lidar_static_tf = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="base_link_to_lidar_tf",
+        output="screen",
+        arguments=[
+            "--x",
+            "0.45",
+            "--y",
+            "0.0",
+            "--z",
+            "0.32",
+            "--roll",
+            "0.0",
+            "--pitch",
+            "0.0",
+            "--yaw",
+            "0.0",
+            "--frame-id",
+            "base_link",
+            "--child-frame-id",
+            "lidar_link",
+        ],
+        parameters=[{"use_sim_time": True}],
+    )
+
     simple_mapper = Node(
         package="ros_test",
         executable="simple_mapper",
@@ -252,6 +278,7 @@ def generate_launch_description():
             bridge,
             odom_to_tf,
             scan_to_chassis,
+            lidar_static_tf,
             TimerAction(period=2.0, actions=[slam_toolbox, simple_mapper, map_monitor, auto_drive]),
             TimerAction(period=8.0, actions=[rviz]),
             TimerAction(period=12.0, actions=nav2_nodes),

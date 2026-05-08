@@ -1,6 +1,7 @@
 import math
 import os
 import time
+from collections import deque
 
 import rclpy
 from action_msgs.msg import GoalStatus
@@ -22,6 +23,12 @@ class Nav2WaypointExplorer(Node):
         self.declare_parameter("frontier_timeout_sec", 45.0)
         self.declare_parameter("initial_scan_sec", 10.0)
         self.declare_parameter("loop_closure_settle_sec", 8.0)
+        self.declare_parameter("frontier_sample_step_m", 0.20)
+        self.declare_parameter("frontier_clearance_m", 0.65)
+        self.declare_parameter("frontier_min_distance_m", 1.2)
+        self.declare_parameter("frontier_max_distance_m", 10.0)
+        self.declare_parameter("frontier_unknown_radius_m", 0.9)
+        self.declare_parameter("frontier_min_unknown_cells", 6)
         self.declare_parameter("return_to_start", True)
 
         self._client = ActionClient(self, NavigateToPose, "navigate_to_pose")
@@ -208,33 +215,47 @@ class Nav2WaypointExplorer(Node):
     def _choose_frontier_goal(self, robot):
         grid = self._map
         resolution = grid.info.resolution
-        step = max(1, int(0.25 / resolution))
+        robot_cell = self._world_to_cell(robot[0], robot[1])
+        if robot_cell is None:
+            return None
+
+        self._safe_cell_cache = {}
+        reachable = self._reachable_safe_cells(robot_cell)
+        self._safe_cell_cache = None
+        if not reachable:
+            self.get_logger().warn("No reachable known-free cells found around the robot yet")
+            return None
+
+        step = max(1, int(self.get_parameter("frontier_sample_step_m").value / resolution))
+        min_distance = self.get_parameter("frontier_min_distance_m").value
+        max_distance = self.get_parameter("frontier_max_distance_m").value
+        unknown_radius = self.get_parameter("frontier_unknown_radius_m").value
+        min_unknown = self.get_parameter("frontier_min_unknown_cells").value
         best = None
         best_score = -1.0
 
-        for my in range(0, grid.info.height, step):
-            for mx in range(0, grid.info.width, step):
-                if not self._is_safe_free_cell(mx, my):
-                    continue
+        for mx, my in reachable:
+            if mx % step or my % step:
+                continue
 
-                x, y = self._cell_to_world(mx, my)
-                robot_distance = math.hypot(x - robot[0], y - robot[1])
-                if robot_distance < 1.0 or robot_distance > 14.0:
-                    continue
-                if self._recently_seen(x, y):
-                    continue
+            x, y = self._cell_to_world(mx, my)
+            robot_distance = math.hypot(x - robot[0], y - robot[1])
+            if robot_distance < min_distance or robot_distance > max_distance:
+                continue
+            if self._recently_seen(x, y):
+                continue
 
-                unknown = self._unknown_neighbor_count(mx, my, 1.0)
-                if unknown < 8:
-                    continue
+            unknown = self._unknown_neighbor_count(mx, my, unknown_radius)
+            if unknown < min_unknown:
+                continue
 
-                start_bonus = 0.0
-                if self._start_pose is not None:
-                    start_bonus = 0.1 * math.hypot(x - self._start_pose[0], y - self._start_pose[1])
-                score = unknown + min(robot_distance, 8.0) * 0.35 + start_bonus
-                if score > best_score:
-                    best = (x, y)
-                    best_score = score
+            start_bonus = 0.0
+            if self._start_pose is not None:
+                start_bonus = 0.1 * math.hypot(x - self._start_pose[0], y - self._start_pose[1])
+            score = unknown + min(robot_distance, 8.0) * 0.35 + start_bonus
+            if score > best_score:
+                best = (x, y)
+                best_score = score
 
         return best
 
@@ -246,22 +267,81 @@ class Nav2WaypointExplorer(Node):
             origin.y + (my + 0.5) * grid.info.resolution,
         )
 
+    def _world_to_cell(self, x, y):
+        grid = self._map
+        origin = grid.info.origin.position
+        mx = int((x - origin.x) / grid.info.resolution)
+        my = int((y - origin.y) / grid.info.resolution)
+        if 0 <= mx < grid.info.width and 0 <= my < grid.info.height:
+            return mx, my
+        return None
+
     def _cell_value(self, mx, my):
         return self._map.data[my * self._map.info.width + mx]
 
     def _is_safe_free_cell(self, mx, my):
+        cache = getattr(self, "_safe_cell_cache", None)
+        if cache is not None and (mx, my) in cache:
+            return cache[(mx, my)]
+
         grid = self._map
-        clearance_cells = max(2, int(0.45 / grid.info.resolution))
+        clearance = self.get_parameter("frontier_clearance_m").value
+        clearance_cells = max(2, int(clearance / grid.info.resolution))
+        safe = True
         for dy in range(-clearance_cells, clearance_cells + 1):
             for dx in range(-clearance_cells, clearance_cells + 1):
+                if dx * dx + dy * dy > clearance_cells * clearance_cells:
+                    continue
                 x = mx + dx
                 y = my + dy
                 if x < 0 or y < 0 or x >= grid.info.width or y >= grid.info.height:
-                    return False
+                    safe = False
+                    break
                 value = self._cell_value(x, y)
                 if value < 0 or value >= 50:
-                    return False
-        return True
+                    safe = False
+                    break
+            if not safe:
+                break
+
+        if cache is not None:
+            cache[(mx, my)] = safe
+        return safe
+
+    def _reachable_safe_cells(self, start):
+        if not self._is_safe_free_cell(start[0], start[1]):
+            nearby = self._nearest_safe_cell(start)
+            if nearby is None:
+                return set()
+            start = nearby
+
+        queue = deque([start])
+        visited = {start}
+        while queue:
+            mx, my = queue.popleft()
+            for nx, ny in ((mx + 1, my), (mx - 1, my), (mx, my + 1), (mx, my - 1)):
+                if (nx, ny) in visited:
+                    continue
+                if not self._is_safe_free_cell(nx, ny):
+                    continue
+                visited.add((nx, ny))
+                queue.append((nx, ny))
+        return visited
+
+    def _nearest_safe_cell(self, start):
+        grid = self._map
+        max_radius = max(2, int(1.0 / grid.info.resolution))
+        for radius in range(1, max_radius + 1):
+            for dy in range(-radius, radius + 1):
+                for dx in range(-radius, radius + 1):
+                    if abs(dx) != radius and abs(dy) != radius:
+                        continue
+                    mx = start[0] + dx
+                    my = start[1] + dy
+                    if 0 <= mx < grid.info.width and 0 <= my < grid.info.height:
+                        if self._is_safe_free_cell(mx, my):
+                            return mx, my
+        return None
 
     def _unknown_neighbor_count(self, mx, my, radius_m):
         grid = self._map

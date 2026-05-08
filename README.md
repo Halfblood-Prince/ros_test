@@ -31,7 +31,8 @@ The launch starts:
 - Gazebo Harmonic world: `robot.sdf`
 - Gazebo Teleop GUI panel
 - ROS-Gazebo bridge for `/clock`, `/scan_raw`, `/imu`, `/odom`, and ROS `/cmd_vel`
-- scan republisher from `/scan_raw` to `/scan` with frame `base_link`
+- scan republisher from `/scan_raw` to `/scan` with frame `lidar_link`
+- static TF from `base_link` to `lidar_link`, matching the lidar pose in `robot.sdf`
 - `odom_to_tf`, publishing `odom -> base_link`
 - `slam_toolbox`, publishing `/map` from `/scan` and TF
 - RViz
@@ -71,7 +72,7 @@ If the RViz map appears to slide with the robot, make sure RViz Global Options u
 
 ```text
 /scan_raw sensor_msgs/msg/LaserScan from Gazebo
-/scan     sensor_msgs/msg/LaserScan with frame base_link
+/scan     sensor_msgs/msg/LaserScan with frame lidar_link
 /imu     sensor_msgs/msg/Imu
 /odom    nav_msgs/msg/Odometry
 /map     nav_msgs/msg/OccupancyGrid

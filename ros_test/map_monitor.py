@@ -26,7 +26,7 @@ class MapMonitor(Node):
         self._seconds_waited += 5
         self.get_logger().warn(
             f"Still waiting for /map after {self._seconds_waited}s. "
-            "Move the robot and confirm scan_to_chassis is republishing /scan with frame base_link."
+            "Move the robot and confirm /scan uses frame lidar_link with base_link -> lidar_link TF."
         )
 
 
