@@ -259,7 +259,7 @@
         <sensor name="gpu_lidar" type="gpu_lidar">
           <pose>0.45 0 0.32 0 0 0</pose>
           <topic>/scan_raw</topic>
-          <update_rate>15</update_rate>
+          <update_rate>40</update_rate>
           <ray>
             <scan>
               <horizontal>

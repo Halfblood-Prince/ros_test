@@ -24,7 +24,7 @@ class Nav2WaypointExplorer(Node):
         self.declare_parameter("initial_scan_sec", 10.0)
         self.declare_parameter("loop_closure_settle_sec", 8.0)
         self.declare_parameter("frontier_sample_step_m", 0.20)
-        self.declare_parameter("frontier_clearance_m", 0.65)
+        self.declare_parameter("frontier_clearance_m", 0.45)
         self.declare_parameter("frontier_min_distance_m", 1.2)
         self.declare_parameter("frontier_max_distance_m", 10.0)
         self.declare_parameter("frontier_unknown_radius_m", 0.9)
@@ -233,10 +233,13 @@ class Nav2WaypointExplorer(Node):
         min_unknown = self.get_parameter("frontier_min_unknown_cells").value
         best = None
         best_score = -1.0
+        sampled = 0
+        near_unknown = 0
 
         for mx, my in reachable:
             if mx % step or my % step:
                 continue
+            sampled += 1
 
             x, y = self._cell_to_world(mx, my)
             robot_distance = math.hypot(x - robot[0], y - robot[1])
@@ -248,6 +251,7 @@ class Nav2WaypointExplorer(Node):
             unknown = self._unknown_neighbor_count(mx, my, unknown_radius)
             if unknown < min_unknown:
                 continue
+            near_unknown += 1
 
             start_bonus = 0.0
             if self._start_pose is not None:
@@ -257,6 +261,12 @@ class Nav2WaypointExplorer(Node):
                 best = (x, y)
                 best_score = score
 
+        if best is None:
+            self.get_logger().info(
+                "Frontier scan found no target "
+                f"({len(reachable)} reachable cells, {sampled} sampled, "
+                f"{near_unknown} near unknown)"
+            )
         return best
 
     def _cell_to_world(self, mx, my):
@@ -285,6 +295,12 @@ class Nav2WaypointExplorer(Node):
             return cache[(mx, my)]
 
         grid = self._map
+        center_value = self._cell_value(mx, my)
+        if center_value < 0 or center_value >= 50:
+            if cache is not None:
+                cache[(mx, my)] = False
+            return False
+
         clearance = self.get_parameter("frontier_clearance_m").value
         clearance_cells = max(2, int(clearance / grid.info.resolution))
         safe = True
@@ -298,7 +314,7 @@ class Nav2WaypointExplorer(Node):
                     safe = False
                     break
                 value = self._cell_value(x, y)
-                if value < 0 or value >= 50:
+                if value >= 50:
                     safe = False
                     break
             if not safe:

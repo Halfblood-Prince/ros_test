@@ -212,6 +212,7 @@ def generate_launch_description():
                 "min_exploration_goals": 10,
                 "frontier_timeout_sec": 45.0,
                 "initial_scan_sec": 10.0,
+                "frontier_clearance_m": 0.45,
                 "return_to_start": True,
             }
         ],
