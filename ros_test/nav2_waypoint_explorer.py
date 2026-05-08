@@ -23,10 +23,10 @@ class Nav2WaypointExplorer(Node):
         self.declare_parameter("frontier_timeout_sec", 45.0)
         self.declare_parameter("initial_scan_sec", 10.0)
         self.declare_parameter("loop_closure_settle_sec", 8.0)
-        self.declare_parameter("frontier_sample_step_m", 0.20)
+        self.declare_parameter("frontier_sample_step_m", 0.35)
         self.declare_parameter("frontier_clearance_m", 0.45)
-        self.declare_parameter("frontier_min_distance_m", 1.2)
-        self.declare_parameter("frontier_max_distance_m", 10.0)
+        self.declare_parameter("frontier_min_distance_m", 3.0)
+        self.declare_parameter("frontier_max_distance_m", 18.0)
         self.declare_parameter("frontier_unknown_radius_m", 0.9)
         self.declare_parameter("frontier_min_unknown_cells", 6)
         self.declare_parameter("return_to_start", True)
@@ -256,7 +256,8 @@ class Nav2WaypointExplorer(Node):
             start_bonus = 0.0
             if self._start_pose is not None:
                 start_bonus = 0.1 * math.hypot(x - self._start_pose[0], y - self._start_pose[1])
-            score = unknown + min(robot_distance, 8.0) * 0.35 + start_bonus
+            distance_bonus = min(robot_distance, max_distance) * 0.8
+            score = unknown + distance_bonus + start_bonus
             if score > best_score:
                 best = (x, y)
                 best_score = score

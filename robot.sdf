@@ -81,8 +81,9 @@
       </link>
     </model>
 
-    <!-- Building-like 2D floor plan for lidar SLAM. Each wall is a static box. -->
+    <!-- Dense interior floor plan kept below the floor so only the perimeter bounds the map. -->
     <model name="building_floor_plan">
+      <pose>0 0 -100 0 0 0</pose>
       <static>true</static>
 
       <!-- Outer walls -->
@@ -219,6 +220,26 @@
         <pose>5.2 -2.8 0.6 0 0 0</pose>
         <collision name="collision"><geometry><cylinder><radius>0.35</radius><length>1.2</length></cylinder></geometry></collision>
         <visual name="visual"><geometry><cylinder><radius>0.35</radius><length>1.2</length></cylinder></geometry><material><ambient>0.7 0.62 0.2 1</ambient><diffuse>0.7 0.62 0.2 1</diffuse></material></visual>
+      </link>
+    </model>
+
+    <!-- Sparse non-wall landmarks for SLAM scan-matching in the open perimeter. -->
+    <model name="sparse_slam_landmarks">
+      <static>true</static>
+      <link name="low_table">
+        <pose>-7.0 -4.5 0.35 0 0 0.25</pose>
+        <collision name="collision"><geometry><box><size>1.2 0.7 0.7</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>1.2 0.7 0.7</size></box></geometry><material><ambient>0.18 0.45 0.7 1</ambient><diffuse>0.18 0.45 0.7 1</diffuse></material></visual>
+      </link>
+      <link name="pillar_west">
+        <pose>3.5 5.5 0.6 0 0 0</pose>
+        <collision name="collision"><geometry><cylinder><radius>0.35</radius><length>1.2</length></cylinder></geometry></collision>
+        <visual name="visual"><geometry><cylinder><radius>0.35</radius><length>1.2</length></cylinder></geometry><material><ambient>0.7 0.62 0.2 1</ambient><diffuse>0.7 0.62 0.2 1</diffuse></material></visual>
+      </link>
+      <link name="tall_marker">
+        <pose>9.0 -6.0 0.6 0 0 -0.4</pose>
+        <collision name="collision"><geometry><box><size>0.7 1.4 1.2</size></box></geometry></collision>
+        <visual name="visual"><geometry><box><size>0.7 1.4 1.2</size></box></geometry><material><ambient>0.45 0.22 0.55 1</ambient><diffuse>0.45 0.22 0.55 1</diffuse></material></visual>
       </link>
     </model>
 

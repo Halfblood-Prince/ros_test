@@ -1,6 +1,6 @@
 # ROS 2 Jazzy Gazebo Lidar SLAM Simulation
 
-This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside an extended building-like floor plan, bridges the simulated sensor data into ROS 2, runs `slam_toolbox`, and opens RViz.
+This package launches a Gazebo Harmonic simulation of a differential-drive lidar robot inside a large perimeter-bounded space with sparse SLAM landmarks, bridges the simulated sensor data into ROS 2, runs `slam_toolbox`, and opens RViz.
 
 ## Install dependencies
 
@@ -28,7 +28,7 @@ Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/ma
 
 The launch starts:
 
-- Gazebo Harmonic world: `robot.sdf`
+- Gazebo Harmonic world: `robot.sdf` with an outer perimeter and sparse non-wall landmarks
 - Gazebo Teleop GUI panel
 - ROS-Gazebo bridge for `/clock`, `/scan_raw`, `/imu`, `/odom`, and ROS `/cmd_vel`
 - scan republisher from `/scan_raw` to `/scan` with frame `lidar_link`
