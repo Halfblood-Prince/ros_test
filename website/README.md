@@ -2,7 +2,7 @@
 
 A Python/Flask app that serves an AeroSentinel drone mission dashboard.
 
-The dashboard UI lives in `public/`. The Flask backend is `app.py` and provides login, logout, the mission page, static assets, the mission JSON API, and an OpenCV-encoded MJPEG camera stream when ROS image messages are available.
+The dashboard UI lives in `public/`. The Flask backend is `app.py` and provides login, logout, the mission page, static assets, the mission JSON API, an OpenCV-encoded MJPEG camera stream, and manual `/cmd_vel` controls when ROS is available.
 
 ## Run
 
@@ -34,6 +34,8 @@ Default development credentials are `admin` / `admin` when `AEROSENTINEL_PASSWOR
 - `AEROSENTINEL_SECURE_COOKIES`: set to `true` behind HTTPS
 - `AEROSENTINEL_CAMERA_TOPIC`: ROS image topic for the live feed, default `/front_camera/image`
 - `AEROSENTINEL_JPEG_QUALITY`: OpenCV JPEG stream quality from `1` to `100`, default `85`
+- `AEROSENTINEL_MAX_LINEAR`: maximum manual linear speed in m/s, default `1.0`
+- `AEROSENTINEL_MAX_ANGULAR`: maximum manual turn speed in rad/s, default `1.8`
 
 ## Smoke Test
 

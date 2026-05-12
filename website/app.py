@@ -172,8 +172,48 @@ def image_encoding_format(encoding: str):
 
 
 camera_frames = CameraFrameStore()
-camera_bridge_lock = threading.Lock()
-camera_bridge_started = False
+ros_bridge_lock = threading.Lock()
+ros_bridge_started = False
+
+
+class RosControlBridge:
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._publisher = None
+        self._twist_type = None
+        self._ready = False
+        self._last_error = "ROS bridge has not started."
+
+    def configure(self, publisher, twist_type) -> None:
+        with self._lock:
+            self._publisher = publisher
+            self._twist_type = twist_type
+            self._ready = True
+            self._last_error = ""
+
+    def set_error(self, message: str) -> None:
+        with self._lock:
+            self._ready = False
+            self._last_error = message
+
+    def publish_cmd_vel(self, linear_x: float, angular_z: float):
+        with self._lock:
+            publisher = self._publisher
+            twist_type = self._twist_type
+            ready = self._ready
+            error = self._last_error
+
+        if not ready or publisher is None or twist_type is None:
+            return False, error
+
+        msg = twist_type()
+        msg.linear.x = float(linear_x)
+        msg.angular.z = float(angular_z)
+        publisher.publish(msg)
+        return True, ""
+
+
+ros_control = RosControlBridge()
 
 
 def env_or_default(name: str, fallback: str) -> str:
@@ -193,60 +233,78 @@ def camera_jpeg_quality() -> int:
     return max(1, min(100, quality))
 
 
+def env_float(name: str, fallback: float) -> float:
+    try:
+        return float(env_or_default(name, str(fallback)))
+    except ValueError:
+        return fallback
+
+
+def clamp(value: float, lower: float, upper: float) -> float:
+    return max(lower, min(upper, value))
+
+
 def no_store(response):
     response.headers["Cache-Control"] = "no-store"
     return response
 
 
-def ensure_camera_bridge(app: Flask) -> None:
-    global camera_bridge_started
+def ensure_ros_bridge(app: Flask) -> None:
+    global ros_bridge_started
 
-    if env_flag("AEROSENTINEL_DISABLE_CAMERA"):
-        return
-
-    with camera_bridge_lock:
-        if camera_bridge_started:
+    with ros_bridge_lock:
+        if ros_bridge_started:
             return
-        camera_bridge_started = True
+        ros_bridge_started = True
 
     topic = env_or_default(CAMERA_TOPIC_ENV, DEFAULT_CAMERA_TOPIC)
+    camera_enabled = not env_flag("AEROSENTINEL_DISABLE_CAMERA")
     try:
-        load_opencv()
+        if camera_enabled:
+            load_opencv()
     except RuntimeError as exc:
+        camera_enabled = False
         app.logger.warning("ROS camera feed disabled; %s", exc)
-        return
 
     try:
         import rclpy
+        from geometry_msgs.msg import Twist
         from rclpy.qos import qos_profile_sensor_data
         from sensor_msgs.msg import Image
     except Exception as exc:
-        app.logger.warning("ROS camera feed disabled; could not import ROS image support: %s", exc)
+        message = f"ROS control bridge disabled; could not import ROS support: {exc}"
+        ros_control.set_error(message)
+        app.logger.warning(message)
         return
 
-    def spin_camera_node():
+    def spin_ros_node():
         node = None
         try:
             if not rclpy.ok():
                 rclpy.init(args=None)
-            node = rclpy.create_node("aerosentinel_camera_web")
+            node = rclpy.create_node("aerosentinel_web")
+            cmd_publisher = node.create_publisher(Twist, "/cmd_vel", 10)
+            ros_control.configure(cmd_publisher, Twist)
 
-            def on_image(msg):
-                try:
-                    camera_frames.update_from_ros_image(msg, topic)
-                except Exception as exc:
-                    node.get_logger().warn(str(exc))
+            if camera_enabled:
+                def on_image(msg):
+                    try:
+                        camera_frames.update_from_ros_image(msg, topic)
+                    except Exception as exc:
+                        node.get_logger().warn(str(exc))
 
-            node.create_subscription(Image, topic, on_image, qos_profile_sensor_data)
-            app.logger.info("Subscribed AeroSentinel web feed to ROS topic %s", topic)
+                node.create_subscription(Image, topic, on_image, qos_profile_sensor_data)
+                app.logger.info("Subscribed AeroSentinel web feed to ROS topic %s", topic)
+            app.logger.info("AeroSentinel web controls publishing to /cmd_vel")
             rclpy.spin(node)
         except Exception:
-            app.logger.exception("ROS camera feed bridge stopped unexpectedly.")
+            ros_control.set_error("ROS control bridge stopped unexpectedly.")
+            app.logger.exception("ROS web bridge stopped unexpectedly.")
         finally:
             if node is not None:
                 node.destroy_node()
 
-    thread = threading.Thread(target=spin_camera_node, name="aerosentinel-camera", daemon=True)
+    thread = threading.Thread(target=spin_ros_node, name="aerosentinel-ros", daemon=True)
     thread.start()
 
 
@@ -272,7 +330,7 @@ def create_app() -> Flask:
         app.logger.warning(
             "AEROSENTINEL_SECRET_KEY is not set; generated sessions will reset on restart."
         )
-    ensure_camera_bridge(app)
+    ensure_ros_bridge(app)
 
     def is_authenticated() -> bool:
         return session.get("authenticated") is True
@@ -384,6 +442,37 @@ def create_app() -> Flask:
                 "signal_percent": 94,
                 "version": "python-flask-1.0.0",
             }
+        )
+
+    @app.post("/api/control/cmd_vel")
+    def control_cmd_vel():
+        if not is_authenticated():
+            return jsonify({"error": "authentication_required"}), 401
+
+        data = request.get_json(silent=True) or {}
+        if not isinstance(data, dict):
+            return no_store(jsonify({"error": "invalid_velocity"})), 400
+        max_linear = abs(env_float("AEROSENTINEL_MAX_LINEAR", 1.0))
+        max_angular = abs(env_float("AEROSENTINEL_MAX_ANGULAR", 1.8))
+        try:
+            linear_x = clamp(float(data.get("linear_x", 0.0)), -max_linear, max_linear)
+            angular_z = clamp(float(data.get("angular_z", 0.0)), -max_angular, max_angular)
+        except (TypeError, ValueError):
+            return no_store(jsonify({"error": "invalid_velocity"})), 400
+
+        ok, error = ros_control.publish_cmd_vel(linear_x, angular_z)
+        if not ok:
+            return no_store(jsonify({"error": "ros_control_unavailable", "detail": error})), 503
+
+        return no_store(
+            jsonify(
+                {
+                    "linear_x": linear_x,
+                    "angular_z": angular_z,
+                    "max_linear": max_linear,
+                    "max_angular": max_angular,
+                }
+            )
         )
 
     def add_camera_headers(response, frame):

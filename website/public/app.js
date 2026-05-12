@@ -48,3 +48,211 @@ function connectCameraFeed() {
 }
 
 connectCameraFeed();
+
+const controlStatus = document.querySelector("#control-status");
+const driveSpeedValue = document.querySelector("#drive-speed");
+const driveSpeedUp = document.querySelector("#drive-speed-up");
+const driveSpeedDown = document.querySelector("#drive-speed-down");
+const driveSlow = document.querySelector("#drive-slow");
+const driveFast = document.querySelector("#drive-fast");
+const driveStop = document.querySelector("#drive-stop");
+const activeDriveKeys = new Set();
+let driveSpeed = 0.55;
+const turnSpeed = 1.15;
+let lastCommand = { linear_x: 0, angular_z: 0 };
+let driveTick = null;
+
+const keyToDrive = {
+  arrowup: "forward",
+  w: "forward",
+  arrowdown: "back",
+  s: "back",
+  arrowleft: "left",
+  a: "left",
+  arrowright: "right",
+  d: "right",
+  " ": "stop"
+};
+
+const driveButtons = Array.from(document.querySelectorAll("[data-drive]"));
+
+function setControlStatus(label, state = "ready") {
+  if (!controlStatus) {
+    return;
+  }
+  controlStatus.textContent = label;
+  controlStatus.dataset.state = state;
+}
+
+function updateDriveSpeed() {
+  driveSpeed = Math.max(0.15, Math.min(1.0, Number(driveSpeed.toFixed(2))));
+  if (driveSpeedValue) {
+    driveSpeedValue.textContent = driveSpeed.toFixed(2);
+  }
+}
+
+function commandFromKeys() {
+  let linear_x = 0;
+  let angular_z = 0;
+
+  if (activeDriveKeys.has("forward")) {
+    linear_x += driveSpeed;
+  }
+  if (activeDriveKeys.has("back")) {
+    linear_x -= driveSpeed;
+  }
+  if (activeDriveKeys.has("left")) {
+    angular_z += turnSpeed;
+  }
+  if (activeDriveKeys.has("right")) {
+    angular_z -= turnSpeed;
+  }
+
+  return { linear_x, angular_z };
+}
+
+function reflectDriveButtons() {
+  driveButtons.forEach((button) => {
+    const action = button.dataset.drive;
+    button.classList.toggle("active", activeDriveKeys.has(action));
+  });
+}
+
+async function sendDriveCommand(command, force = false) {
+  if (
+    !force &&
+    command.linear_x === lastCommand.linear_x &&
+    command.angular_z === lastCommand.angular_z
+  ) {
+    return;
+  }
+
+  lastCommand = command;
+  try {
+    const response = await fetch("/api/control/cmd_vel", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(command)
+    });
+    if (!response.ok) {
+      setControlStatus("Offline", "error");
+      return;
+    }
+    setControlStatus(command.linear_x || command.angular_z ? "Driving" : "Hold", "ready");
+  } catch {
+    setControlStatus("Offline", "error");
+  }
+}
+
+function sendCurrentDrive(force = false) {
+  const command = commandFromKeys();
+  reflectDriveButtons();
+  sendDriveCommand(command, force);
+}
+
+function startDriveLoop() {
+  if (driveTick) {
+    return;
+  }
+  driveTick = setInterval(() => {
+    if (activeDriveKeys.size > 0) {
+      sendDriveCommand(commandFromKeys(), true);
+    }
+  }, 120);
+}
+
+function stopDriveLoopIfIdle() {
+  if (activeDriveKeys.size === 0 && driveTick) {
+    clearInterval(driveTick);
+    driveTick = null;
+  }
+}
+
+function beginDrive(action) {
+  if (action === "stop") {
+    activeDriveKeys.clear();
+    sendCurrentDrive(true);
+    stopDriveLoopIfIdle();
+    return;
+  }
+  activeDriveKeys.add(action);
+  startDriveLoop();
+  sendCurrentDrive(true);
+}
+
+function endDrive(action) {
+  activeDriveKeys.delete(action);
+  sendCurrentDrive(true);
+  stopDriveLoopIfIdle();
+}
+
+function shouldIgnoreKeyboardEvent(event) {
+  const tagName = event.target?.tagName;
+  return tagName === "INPUT" || tagName === "TEXTAREA" || event.target?.isContentEditable;
+}
+
+document.addEventListener("keydown", (event) => {
+  if (shouldIgnoreKeyboardEvent(event)) {
+    return;
+  }
+  const action = keyToDrive[event.key.toLowerCase()];
+  if (!action) {
+    return;
+  }
+  event.preventDefault();
+  beginDrive(action);
+});
+
+document.addEventListener("keyup", (event) => {
+  const action = keyToDrive[event.key.toLowerCase()];
+  if (!action || action === "stop") {
+    return;
+  }
+  event.preventDefault();
+  endDrive(action);
+});
+
+driveButtons.forEach((button) => {
+  const action = button.dataset.drive;
+  button.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    beginDrive(action);
+  });
+  button.addEventListener("pointerup", () => endDrive(action));
+  button.addEventListener("pointercancel", () => endDrive(action));
+  button.addEventListener("pointerleave", () => endDrive(action));
+});
+
+driveSpeedUp?.addEventListener("click", () => {
+  driveSpeed += 0.1;
+  updateDriveSpeed();
+});
+
+driveSpeedDown?.addEventListener("click", () => {
+  driveSpeed -= 0.1;
+  updateDriveSpeed();
+});
+
+driveSlow?.addEventListener("click", () => {
+  driveSpeed = 0.35;
+  updateDriveSpeed();
+});
+
+driveFast?.addEventListener("click", () => {
+  driveSpeed = 0.85;
+  updateDriveSpeed();
+});
+
+driveStop?.addEventListener("click", () => {
+  activeDriveKeys.clear();
+  sendCurrentDrive(true);
+  stopDriveLoopIfIdle();
+});
+
+window.addEventListener("blur", () => {
+  activeDriveKeys.clear();
+  sendCurrentDrive(true);
+  stopDriveLoopIfIdle();
+});
+
+updateDriveSpeed();

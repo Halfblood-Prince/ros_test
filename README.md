@@ -24,7 +24,7 @@ source install/setup.bash
 ros2 launch ros_test gazebo_slam.launch.py
 ```
 
-Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 autonomously explores reachable frontiers in the SLAM map. When no reachable frontiers remain, the robot returns near its start pose to give `slam_toolbox` a loop-closure opportunity, waits for the graph to settle, saves the map, and then stops exploration so Nav2 is ready for normal pathfinding goals.
+Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and the web dashboard opens manual control over `/cmd_vel`. Nav2 autonomous exploration is detached by default for now.
 
 The launch also starts the AeroSentinel Flask dashboard at `http://127.0.0.1:8080/mission/alpha-0426` and binds it to `0.0.0.0` by default. The default development login is `admin` / `admin`.
 
@@ -33,7 +33,7 @@ The launch starts:
 - Gazebo Harmonic world: `robot.sdf` with an outer perimeter and sparse non-wall landmarks
 - Gazebo Teleop GUI panel
 - ROS-Gazebo bridge for `/clock`, `/scan_raw`, `/front_camera/image`, `/imu`, `/odom`, and ROS `/cmd_vel`
-- 1920x1080 front camera mounted on the robot chassis
+- 1920x1080 front camera mounted on the robot chassis at 60 FPS
 - scan republisher from `/scan_raw` to `/scan` with frame `lidar_link`
 - static TF from `base_link` to `lidar_link`, matching the lidar pose in `robot.sdf`
 - `odom_to_tf`, publishing `odom -> base_link`
@@ -41,22 +41,22 @@ The launch starts:
 - `map_filter`, republishing only non-empty SLAM maps as `/map_valid`
 - RViz
 - `map_monitor`, which reports when `/map` is received
-- AeroSentinel Flask dashboard on port `8080`, displaying the front camera feed as an OpenCV-encoded MJPEG stream
-- Nav2 navigation servers, costmaps, behavior tree navigator, waypoint follower, and map saver
-- `nav2_waypoint_explorer`, which selects frontier goals from the full occupancy grid and saves the completed map to `maps/complete_environment.yaml` and `maps/complete_environment.pgm`
+- AeroSentinel Flask dashboard on port `8080`, displaying the front camera feed as an OpenCV-encoded MJPEG stream and publishing manual keyboard commands to `/cmd_vel`
+- Nav2 navigation servers, costmaps, behavior tree navigator, waypoint follower, and map saver only when `nav2:=true`
+- `nav2_waypoint_explorer` only when both `nav2:=true` and `explore:=true`
 
 ## Manual and Fallback Modes
 
-To disable Nav2 and drive only from the Gazebo Teleop panel:
+Nav2 is disabled by default. To reattach the navigation stack:
 
 ```bash
-ros2 launch ros_test gazebo_slam.launch.py nav2:=false
+ros2 launch ros_test gazebo_slam.launch.py nav2:=true
 ```
 
-To keep Nav2 running but prevent autonomous exploration while you drive manually:
+To re-enable autonomous exploration:
 
 ```bash
-ros2 launch ros_test gazebo_slam.launch.py explore:=false
+ros2 launch ros_test gazebo_slam.launch.py nav2:=true explore:=true
 ```
 
 For the simple wall-following driver instead of Nav2:
@@ -78,6 +78,8 @@ ros2 launch ros_test gazebo_slam.launch.py web:=false
 ros2 launch ros_test gazebo_slam.launch.py web_port:=8081
 ```
 
+The dashboard publishes manual drive commands with keyboard input and the on-screen D-pad. The default speed limits are `AEROSENTINEL_MAX_LINEAR=1.0` and `AEROSENTINEL_MAX_ANGULAR=1.8`.
+
 To keep the dashboard bound to localhost only:
 
 ```bash
@@ -93,12 +95,12 @@ If the RViz map appears to slide with the robot, make sure RViz Global Options u
 ```text
 /scan_raw sensor_msgs/msg/LaserScan from Gazebo
 /scan     sensor_msgs/msg/LaserScan with frame lidar_link
-/front_camera/image sensor_msgs/msg/Image 1920x1080 RGB camera feed
+/front_camera/image sensor_msgs/msg/Image 1920x1080 RGB camera feed at 60 FPS
 /imu     sensor_msgs/msg/Imu
 /odom    nav_msgs/msg/Odometry
 /map     nav_msgs/msg/OccupancyGrid
 /map_valid nav_msgs/msg/OccupancyGrid with empty startup maps filtered out
-/cmd_vel geometry_msgs/msg/Twist
+/cmd_vel geometry_msgs/msg/Twist from the web controls, Gazebo Teleop panel, or other manual publishers
 ```
 
 Move the robot for a few seconds before expecting a useful map. The simulated lidar range is 5 m, so the map expands as the robot explores nearby rooms and corridors.

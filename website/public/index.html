@@ -152,39 +152,39 @@
 
           <article class="panel manual-panel">
             <div class="panel-title">
-              <span>Manual Override</span>
-              <span class="pill rc">RC Override</span>
+              <span>Manual Drive</span>
+              <span class="pill rc" id="control-status">Ready</span>
             </div>
             <div class="field-label">Flight Mode</div>
             <div class="segmented">
-              <button class="active">Auto</button>
-              <button>Guided</button>
-              <button>Loiter</button>
-              <button>RTL</button>
+              <button class="active">Manual</button>
+              <button>Hold</button>
+              <button>Slow</button>
+              <button>Stop</button>
             </div>
             <div class="control-grid">
               <section>
                 <div class="field-label">Direction / Yaw</div>
                 <div class="dpad" aria-label="Direction controls">
-                  <button class="up" aria-label="Forward">&#8963;</button>
-                  <button class="left" aria-label="Left">&lsaquo;</button>
-                  <button class="center" aria-label="Hold">&#9022;</button>
-                  <button class="right" aria-label="Right">&rsaquo;</button>
-                  <button class="down" aria-label="Back">&#8964;</button>
+                  <button class="up" data-drive="forward" aria-label="Forward">&#8963;</button>
+                  <button class="left" data-drive="left" aria-label="Left">&lsaquo;</button>
+                  <button class="center" data-drive="stop" aria-label="Hold">&#9022;</button>
+                  <button class="right" data-drive="right" aria-label="Right">&rsaquo;</button>
+                  <button class="down" data-drive="back" aria-label="Back">&#8964;</button>
                 </div>
               </section>
               <section class="altitude-control">
-                <div class="field-label">Altitude</div>
-                <button aria-label="Increase altitude">&uarr;</button>
-                <div class="altitude-value"><strong>512</strong><span>m</span></div>
-                <button aria-label="Decrease altitude">&darr;</button>
+                <div class="field-label">Speed</div>
+                <button id="drive-speed-up" aria-label="Increase speed">&uarr;</button>
+                <div class="altitude-value"><strong id="drive-speed">0.55</strong><span>m/s</span></div>
+                <button id="drive-speed-down" aria-label="Decrease speed">&darr;</button>
               </section>
             </div>
             <div class="action-row">
-              <button class="takeoff">&#8613; Take Off</button>
-              <button class="land">&#8615; Land</button>
+              <button class="takeoff" id="drive-slow">&#8615; Slow</button>
+              <button class="land" id="drive-fast">&#8613; Fast</button>
             </div>
-            <button class="emergency">&#9678; Emergency Stop</button>
+            <button class="emergency" id="drive-stop">&#9678; Emergency Stop</button>
           </article>
 
           <article class="panel telemetry-panel">
@@ -223,15 +223,15 @@
 
             <article class="panel settings-panel">
               <div class="panel-title">
-                <span>Autonomous Settings</span>
+                <span>Autonomy</span>
                 <button class="ghost-button" aria-label="Edit settings">&#9998;</button>
               </div>
               <dl class="table-list">
-                <div><dt>Obstacle Avoidance</dt><dd class="good">Enabled</dd></div>
-                <div><dt>Return To Home Alt.</dt><dd>120 m &rsaquo;</dd></div>
-                <div><dt>Loiter Radius</dt><dd>50 m &rsaquo;</dd></div>
-                <div><dt>Max Altitude</dt><dd>600 m &rsaquo;</dd></div>
-                <div><dt>Geofence</dt><dd class="good">Enabled</dd></div>
+                <div><dt>Mode</dt><dd>Detached</dd></div>
+                <div><dt>Planner</dt><dd>Standby</dd></div>
+                <div><dt>Explorer</dt><dd>Off</dd></div>
+                <div><dt>Velocity Source</dt><dd>Web Manual</dd></div>
+                <div><dt>Nav2</dt><dd>Disabled</dd></div>
               </dl>
             </article>
 

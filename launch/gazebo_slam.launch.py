@@ -301,12 +301,12 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "nav2",
-                default_value="true",
+                default_value="false",
                 description="Set false to disable the Nav2 navigation stack.",
             ),
             DeclareLaunchArgument(
                 "explore",
-                default_value="true",
+                default_value="false",
                 description="Set false to keep Nav2 ready but disable autonomous exploration.",
             ),
             DeclareLaunchArgument(

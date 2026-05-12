@@ -894,6 +894,11 @@ button {
   color: #48d36d;
 }
 
+.rc[data-state="error"] {
+  color: #ff7e86;
+  background: rgba(197, 31, 45, 0.18);
+}
+
 .segmented {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -998,6 +1003,12 @@ button {
   transform: translate(-50%, -50%);
   border: 2px solid rgba(107, 232, 143, 0.45);
   background: rgba(23, 55, 66, 0.78);
+}
+
+.dpad button.active {
+  color: #ffffff;
+  background: rgba(30, 167, 255, 0.72);
+  box-shadow: 0 0 18px rgba(30, 167, 255, 0.36);
 }
 
 .altitude-control {
