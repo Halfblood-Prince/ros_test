@@ -452,7 +452,7 @@ def create_app() -> Flask:
         data = request.get_json(silent=True) or {}
         if not isinstance(data, dict):
             return no_store(jsonify({"error": "invalid_velocity"})), 400
-        max_linear = abs(env_float("AEROSENTINEL_MAX_LINEAR", 1.0))
+        max_linear = abs(env_float("AEROSENTINEL_MAX_LINEAR", 2.5))
         max_angular = abs(env_float("AEROSENTINEL_MAX_ANGULAR", 1.8))
         try:
             linear_x = clamp(float(data.get("linear_x", 0.0)), -max_linear, max_linear)

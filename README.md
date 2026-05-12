@@ -78,7 +78,7 @@ ros2 launch ros_test gazebo_slam.launch.py web:=false
 ros2 launch ros_test gazebo_slam.launch.py web_port:=8081
 ```
 
-The dashboard publishes manual drive commands with keyboard input and the on-screen D-pad. The default speed limits are `AEROSENTINEL_MAX_LINEAR=1.0` and `AEROSENTINEL_MAX_ANGULAR=1.8`.
+The dashboard publishes manual drive commands with keyboard input and the on-screen D-pad at about 25 Hz while keys are held. The default speed limits are `AEROSENTINEL_MAX_LINEAR=2.5` and `AEROSENTINEL_MAX_ANGULAR=1.8`.
 
 To keep the dashboard bound to localhost only:
 

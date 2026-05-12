@@ -34,7 +34,7 @@ Default development credentials are `admin` / `admin` when `AEROSENTINEL_PASSWOR
 - `AEROSENTINEL_SECURE_COOKIES`: set to `true` behind HTTPS
 - `AEROSENTINEL_CAMERA_TOPIC`: ROS image topic for the live feed, default `/front_camera/image`
 - `AEROSENTINEL_JPEG_QUALITY`: OpenCV JPEG stream quality from `1` to `100`, default `85`
-- `AEROSENTINEL_MAX_LINEAR`: maximum manual linear speed in m/s, default `1.0`
+- `AEROSENTINEL_MAX_LINEAR`: maximum manual linear speed in m/s, default `2.5`
 - `AEROSENTINEL_MAX_ANGULAR`: maximum manual turn speed in rad/s, default `1.8`
 
 ## Smoke Test

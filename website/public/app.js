@@ -57,7 +57,10 @@ const driveSlow = document.querySelector("#drive-slow");
 const driveFast = document.querySelector("#drive-fast");
 const driveStop = document.querySelector("#drive-stop");
 const activeDriveKeys = new Set();
-let driveSpeed = 0.55;
+const minDriveSpeed = 0.25;
+const maxDriveSpeed = 2.5;
+const driveCommandIntervalMs = 40;
+let driveSpeed = 1.25;
 const turnSpeed = 1.15;
 let lastCommand = { linear_x: 0, angular_z: 0 };
 let driveTick = null;
@@ -85,7 +88,7 @@ function setControlStatus(label, state = "ready") {
 }
 
 function updateDriveSpeed() {
-  driveSpeed = Math.max(0.15, Math.min(1.0, Number(driveSpeed.toFixed(2))));
+  driveSpeed = Math.max(minDriveSpeed, Math.min(maxDriveSpeed, Number(driveSpeed.toFixed(2))));
   if (driveSpeedValue) {
     driveSpeedValue.textContent = driveSpeed.toFixed(2);
   }
@@ -158,7 +161,7 @@ function startDriveLoop() {
     if (activeDriveKeys.size > 0) {
       sendDriveCommand(commandFromKeys(), true);
     }
-  }, 120);
+  }, driveCommandIntervalMs);
 }
 
 function stopDriveLoopIfIdle() {
@@ -224,22 +227,22 @@ driveButtons.forEach((button) => {
 });
 
 driveSpeedUp?.addEventListener("click", () => {
-  driveSpeed += 0.1;
+  driveSpeed += 0.25;
   updateDriveSpeed();
 });
 
 driveSpeedDown?.addEventListener("click", () => {
-  driveSpeed -= 0.1;
+  driveSpeed -= 0.25;
   updateDriveSpeed();
 });
 
 driveSlow?.addEventListener("click", () => {
-  driveSpeed = 0.35;
+  driveSpeed = 0.75;
   updateDriveSpeed();
 });
 
 driveFast?.addEventListener("click", () => {
-  driveSpeed = 0.85;
+  driveSpeed = 2.0;
   updateDriveSpeed();
 });
 
