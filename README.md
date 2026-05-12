@@ -6,7 +6,7 @@ This package launches a Gazebo Harmonic simulation of a differential-drive lidar
 
 ```bash
 sudo apt update
-sudo apt install python3-colcon-common-extensions ros-jazzy-nav2-bringup ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-rviz2 ros-jazzy-slam-toolbox ros-jazzy-tf2-ros
+sudo apt install python3-colcon-common-extensions python3-flask ros-jazzy-nav2-bringup ros-jazzy-ros-gz ros-jazzy-ros-gz-bridge ros-jazzy-ros-gz-sim ros-jazzy-rviz2 ros-jazzy-slam-toolbox ros-jazzy-tf2-ros
 ```
 
 ## Build
@@ -26,6 +26,8 @@ ros2 launch ros_test gazebo_slam.launch.py
 
 Gazebo opens with a floating Teleop panel, RViz opens with `/scan`, TF, and `/map` displays, and Nav2 autonomously explores reachable frontiers in the SLAM map. When no reachable frontiers remain, the robot returns near its start pose to give `slam_toolbox` a loop-closure opportunity, waits for the graph to settle, saves the map, and then stops exploration so Nav2 is ready for normal pathfinding goals.
 
+The launch also starts the AeroSentinel Flask dashboard at `http://127.0.0.1:8080/mission/alpha-0426`. The default development login is `admin` / `admin`.
+
 The launch starts:
 
 - Gazebo Harmonic world: `robot.sdf` with an outer perimeter and sparse non-wall landmarks
@@ -38,6 +40,7 @@ The launch starts:
 - `map_filter`, republishing only non-empty SLAM maps as `/map_valid`
 - RViz
 - `map_monitor`, which reports when `/map` is received
+- AeroSentinel Flask dashboard on port `8080`
 - Nav2 navigation servers, costmaps, behavior tree navigator, waypoint follower, and map saver
 - `nav2_waypoint_explorer`, which selects frontier goals from the full occupancy grid and saves the completed map to `maps/complete_environment.yaml` and `maps/complete_environment.pgm`
 
@@ -66,6 +69,15 @@ For the older odom-only fallback mapper:
 ```bash
 ros2 launch ros_test gazebo_slam.launch.py nav2:=false mapper:=true
 ```
+
+To disable the Flask dashboard or run it on another port:
+
+```bash
+ros2 launch ros_test gazebo_slam.launch.py web:=false
+ros2 launch ros_test gazebo_slam.launch.py web_port:=8081
+```
+
+To make the dashboard reachable from other machines, launch with `web_bind_address:=0.0.0.0` and set `AEROSENTINEL_PASSWORD` and `AEROSENTINEL_SECRET_KEY` first.
 
 If the RViz map appears to slide with the robot, make sure RViz Global Options uses fixed frame `map`, not `odom`. The robot should move in the map; the map should not move with the robot.
 

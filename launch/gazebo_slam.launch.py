@@ -16,6 +16,9 @@ def generate_launch_description():
     mapper = LaunchConfiguration("mapper")
     nav2_enabled = LaunchConfiguration("nav2")
     explore_enabled = LaunchConfiguration("explore")
+    web_enabled = LaunchConfiguration("web")
+    web_port = LaunchConfiguration("web_port")
+    web_bind_address = LaunchConfiguration("web_bind_address")
 
     default_world = PathJoinSubstitution([pkg_share, "robot.sdf"])
     default_gui_config = PathJoinSubstitution([pkg_share, "config", "gazebo_teleop.config"])
@@ -256,6 +259,18 @@ def generate_launch_description():
         condition=IfCondition(auto_drive_enabled),
     )
 
+    web_server = Node(
+        package="ros_test",
+        executable="web_server",
+        name="aerosentinel_web",
+        output="screen",
+        additional_env={
+            "PORT": web_port,
+            "AEROSENTINEL_BIND_ADDRESS": web_bind_address,
+        },
+        condition=IfCondition(web_enabled),
+    )
+
     return LaunchDescription(
         [
             DeclareLaunchArgument(
@@ -293,6 +308,22 @@ def generate_launch_description():
                 default_value="true",
                 description="Set false to keep Nav2 ready but disable autonomous exploration.",
             ),
+            DeclareLaunchArgument(
+                "web",
+                default_value="true",
+                description="Set false to disable the AeroSentinel Flask web dashboard.",
+            ),
+            DeclareLaunchArgument(
+                "web_port",
+                default_value="8080",
+                description="Port for the AeroSentinel Flask web dashboard.",
+            ),
+            DeclareLaunchArgument(
+                "web_bind_address",
+                default_value="127.0.0.1",
+                description="Bind address for the AeroSentinel Flask web dashboard.",
+            ),
+            web_server,
             gazebo,
             bridge,
             odom_to_tf,

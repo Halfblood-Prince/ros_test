@@ -1,7 +1,28 @@
+import os
 from glob import glob
+from pathlib import Path
 from setuptools import setup
 
 package_name = "ros_test"
+
+
+def collect_data_files(source_dir, destination):
+    source_path = Path(source_dir)
+    if not source_path.exists():
+        return []
+
+    data_files = []
+    for directory, _, filenames in os.walk(source_path):
+        files = [str(Path(directory) / filename) for filename in filenames]
+        if not files:
+            continue
+
+        relative_dir = Path(directory).relative_to(source_path)
+        install_dir = Path("share") / package_name / destination / relative_dir
+        data_files.append((str(install_dir), files))
+
+    return data_files
+
 
 setup(
     name=package_name,
@@ -14,8 +35,9 @@ setup(
         (f"share/{package_name}/config", glob("config/*.yaml")),
         (f"share/{package_name}/launch", glob("launch/*.launch.py")),
         (f"share/{package_name}/rviz", glob("rviz/*.rviz")),
-    ],
-    install_requires=["setuptools"],
+    ]
+    + collect_data_files("website", "website"),
+    install_requires=["setuptools", "Flask>=3.0,<4.0"],
     zip_safe=True,
     maintainer="user",
     maintainer_email="user@example.com",
@@ -30,6 +52,7 @@ setup(
             "odom_to_tf = ros_test.odom_to_tf:main",
             "scan_to_chassis = ros_test.scan_to_chassis:main",
             "simple_mapper = ros_test.simple_mapper:main",
+            "web_server = ros_test.web_server:main",
         ],
     },
 )
