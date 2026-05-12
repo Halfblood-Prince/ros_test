@@ -3,13 +3,177 @@ from __future__ import annotations
 import hmac
 import os
 import secrets
+import threading
+import time
 from pathlib import Path
 
-from flask import Flask, jsonify, make_response, redirect, request, send_from_directory, session
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    redirect,
+    request,
+    send_from_directory,
+    session,
+    stream_with_context,
+)
 
 
 ROOT_DIR = Path(__file__).resolve().parent
 PUBLIC_DIR = ROOT_DIR / "public"
+CAMERA_TOPIC_ENV = "AEROSENTINEL_CAMERA_TOPIC"
+DEFAULT_CAMERA_TOPIC = "/front_camera/image"
+JPEG_QUALITY_ENV = "AEROSENTINEL_JPEG_QUALITY"
+DEFAULT_JPEG_QUALITY = 85
+_cv2 = None
+_np = None
+
+
+class CameraFrameStore:
+    def __init__(self):
+        self._condition = threading.Condition()
+        self._jpeg = None
+        self._timestamp = 0.0
+        self._width = 0
+        self._height = 0
+        self._encoding = ""
+        self._sequence = 0
+        self._topic = DEFAULT_CAMERA_TOPIC
+
+    def update_from_ros_image(self, msg, topic: str) -> None:
+        jpeg = ros_image_to_jpeg(msg, camera_jpeg_quality())
+        with self._condition:
+            self._jpeg = jpeg
+            self._timestamp = time.time()
+            self._width = int(msg.width)
+            self._height = int(msg.height)
+            self._encoding = str(msg.encoding)
+            self._sequence += 1
+            self._topic = topic
+            self._condition.notify_all()
+
+    def get(self):
+        with self._condition:
+            return self._snapshot_locked()
+
+    def wait_for_frame(self, last_sequence: int, timeout: float = 2.0):
+        with self._condition:
+            self._condition.wait_for(
+                lambda: self._jpeg is not None and self._sequence != last_sequence,
+                timeout=timeout,
+            )
+            return self._snapshot_locked()
+
+    def _snapshot_locked(self):
+        if self._jpeg is None:
+            return None
+        return {
+            "jpeg": self._jpeg,
+            "timestamp": self._timestamp,
+            "width": self._width,
+            "height": self._height,
+            "encoding": self._encoding,
+            "sequence": self._sequence,
+            "topic": self._topic,
+        }
+
+
+def load_opencv():
+    global _cv2, _np
+
+    if _cv2 is not None and _np is not None:
+        return _cv2, _np
+
+    try:
+        import cv2
+        import numpy as np
+    except Exception as exc:
+        raise RuntimeError(
+            "OpenCV camera streaming requires python3-opencv or opencv-python."
+        ) from exc
+
+    _cv2 = cv2
+    _np = np
+    return _cv2, _np
+
+
+def ros_image_to_jpeg(msg, quality: int) -> bytes:
+    return raw_image_to_jpeg(
+        int(msg.width),
+        int(msg.height),
+        str(msg.encoding),
+        int(msg.step),
+        bytes(msg.data),
+        quality,
+    )
+
+
+def raw_image_to_jpeg(
+    width: int,
+    height: int,
+    encoding: str,
+    step: int,
+    raw: bytes,
+    quality: int,
+) -> bytes:
+    cv2, _ = load_opencv()
+    image = raw_image_to_cv_image(width, height, encoding, step, raw)
+    ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, quality])
+    if not ok:
+        raise ValueError("OpenCV failed to encode camera frame as JPEG.")
+    return encoded.tobytes()
+
+
+def raw_image_to_cv_image(width: int, height: int, encoding: str, step: int, raw: bytes):
+    cv2, np = load_opencv()
+    encoding = encoding.lower()
+
+    if width <= 0 or height <= 0:
+        raise ValueError("Camera image has invalid dimensions.")
+
+    source_format, channels = image_encoding_format(encoding)
+    row_size = width * channels
+    step = step if step > 0 else row_size
+    if len(raw) < step * height:
+        raise ValueError("Camera image payload is smaller than expected.")
+
+    if step != row_size:
+        raw = b"".join(raw[y * step : y * step + row_size] for y in range(height))
+    else:
+        raw = raw[: height * row_size]
+
+    if channels == 1:
+        image = np.frombuffer(raw, dtype=np.uint8).reshape((height, width))
+    else:
+        image = np.frombuffer(raw, dtype=np.uint8).reshape((height, width, channels))
+
+    if source_format == "rgb":
+        return cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    if source_format == "rgba":
+        return cv2.cvtColor(image, cv2.COLOR_RGBA2BGR)
+    if source_format == "bgra":
+        return cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
+    return image
+
+
+def image_encoding_format(encoding: str):
+    if encoding in {"rgb8", "r8g8b8", "8uc3"}:
+        return "rgb", 3
+    if encoding in {"bgr8", "b8g8r8"}:
+        return "bgr", 3
+    if encoding in {"rgba8", "r8g8b8a8", "8uc4"}:
+        return "rgba", 4
+    if encoding in {"bgra8", "b8g8r8a8"}:
+        return "bgra", 4
+    if encoding in {"mono8", "8uc1"}:
+        return "mono", 1
+    raise ValueError(f"Unsupported camera image encoding: {encoding}")
+
+
+camera_frames = CameraFrameStore()
+camera_bridge_lock = threading.Lock()
+camera_bridge_started = False
 
 
 def env_or_default(name: str, fallback: str) -> str:
@@ -21,9 +185,69 @@ def env_flag(name: str) -> bool:
     return env_or_default(name, "").lower() in {"1", "true", "yes", "on"}
 
 
+def camera_jpeg_quality() -> int:
+    try:
+        quality = int(env_or_default(JPEG_QUALITY_ENV, str(DEFAULT_JPEG_QUALITY)))
+    except ValueError:
+        return DEFAULT_JPEG_QUALITY
+    return max(1, min(100, quality))
+
+
 def no_store(response):
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+def ensure_camera_bridge(app: Flask) -> None:
+    global camera_bridge_started
+
+    if env_flag("AEROSENTINEL_DISABLE_CAMERA"):
+        return
+
+    with camera_bridge_lock:
+        if camera_bridge_started:
+            return
+        camera_bridge_started = True
+
+    topic = env_or_default(CAMERA_TOPIC_ENV, DEFAULT_CAMERA_TOPIC)
+    try:
+        load_opencv()
+    except RuntimeError as exc:
+        app.logger.warning("ROS camera feed disabled; %s", exc)
+        return
+
+    try:
+        import rclpy
+        from rclpy.qos import qos_profile_sensor_data
+        from sensor_msgs.msg import Image
+    except Exception as exc:
+        app.logger.warning("ROS camera feed disabled; could not import ROS image support: %s", exc)
+        return
+
+    def spin_camera_node():
+        node = None
+        try:
+            if not rclpy.ok():
+                rclpy.init(args=None)
+            node = rclpy.create_node("aerosentinel_camera_web")
+
+            def on_image(msg):
+                try:
+                    camera_frames.update_from_ros_image(msg, topic)
+                except Exception as exc:
+                    node.get_logger().warn(str(exc))
+
+            node.create_subscription(Image, topic, on_image, qos_profile_sensor_data)
+            app.logger.info("Subscribed AeroSentinel web feed to ROS topic %s", topic)
+            rclpy.spin(node)
+        except Exception:
+            app.logger.exception("ROS camera feed bridge stopped unexpectedly.")
+        finally:
+            if node is not None:
+                node.destroy_node()
+
+    thread = threading.Thread(target=spin_camera_node, name="aerosentinel-camera", daemon=True)
+    thread.start()
 
 
 def create_app() -> Flask:
@@ -48,6 +272,7 @@ def create_app() -> Flask:
         app.logger.warning(
             "AEROSENTINEL_SECRET_KEY is not set; generated sessions will reset on restart."
         )
+    ensure_camera_bridge(app)
 
     def is_authenticated() -> bool:
         return session.get("authenticated") is True
@@ -160,6 +385,53 @@ def create_app() -> Flask:
                 "version": "python-flask-1.0.0",
             }
         )
+
+    def add_camera_headers(response, frame):
+        response.headers["X-Camera-Topic"] = frame["topic"]
+        response.headers["X-Camera-Width"] = str(frame["width"])
+        response.headers["X-Camera-Height"] = str(frame["height"])
+        response.headers["X-Camera-Encoding"] = frame["encoding"]
+        response.headers["X-Camera-Age"] = f"{time.time() - frame['timestamp']:.3f}"
+        return no_store(response)
+
+    @app.get("/api/camera/frame.jpg")
+    def camera_frame():
+        if not is_authenticated():
+            return jsonify({"error": "authentication_required"}), 401
+
+        frame = camera_frames.get()
+        if frame is None:
+            return no_store(jsonify({"error": "camera_frame_unavailable"})), 503
+
+        return add_camera_headers(Response(frame["jpeg"], mimetype="image/jpeg"), frame)
+
+    @app.get("/api/camera/stream.mjpg")
+    def camera_stream():
+        if not is_authenticated():
+            return jsonify({"error": "authentication_required"}), 401
+
+        def generate():
+            last_sequence = 0
+            while True:
+                frame = camera_frames.wait_for_frame(last_sequence)
+                if frame is None or frame["sequence"] == last_sequence:
+                    continue
+                last_sequence = frame["sequence"]
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n"
+                    b"Cache-Control: no-store\r\n\r\n"
+                    + frame["jpeg"]
+                    + b"\r\n"
+                )
+
+        response = Response(
+            stream_with_context(generate()),
+            mimetype="multipart/x-mixed-replace; boundary=frame",
+        )
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Accel-Buffering"] = "no"
+        return response
 
     @app.get("/styles.css")
     def styles():

@@ -43,6 +43,7 @@ def generate_launch_description():
         arguments=[
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
             "/scan_raw@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+            "/front_camera/image@sensor_msgs/msg/Image[gz.msgs.Image",
             "/imu@sensor_msgs/msg/Imu[gz.msgs.IMU",
             "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
@@ -320,7 +321,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "web_bind_address",
-                default_value="127.0.0.1",
+                default_value="0.0.0.0",
                 description="Bind address for the AeroSentinel Flask web dashboard.",
             ),
             web_server,

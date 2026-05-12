@@ -37,7 +37,7 @@ setup(
         (f"share/{package_name}/rviz", glob("rviz/*.rviz")),
     ]
     + collect_data_files("website", "website"),
-    install_requires=["setuptools", "Flask>=3.0,<4.0"],
+    install_requires=["setuptools", "Flask>=3.0,<4.0", "opencv-python>=4.8,<5.0"],
     zip_safe=True,
     maintainer="user",
     maintainer_email="user@example.com",

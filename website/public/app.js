@@ -18,3 +18,33 @@ setInterval(tick, 1000);
 document.querySelectorAll(".metric strong").forEach((node, index) => {
   node.style.animationDelay = `${index * 45}ms`;
 });
+
+const cameraFeed = document.querySelector("#camera-feed");
+const cameraStatus = document.querySelector("#camera-status");
+
+function setCameraStatus(label) {
+  if (!cameraStatus) {
+    return;
+  }
+  cameraStatus.textContent = label;
+}
+
+function connectCameraFeed() {
+  if (!cameraFeed) {
+    return;
+  }
+
+  setCameraStatus("Connecting");
+  cameraFeed.onload = () => {
+    cameraFeed.dataset.live = "true";
+    setCameraStatus("1080p  Live");
+  };
+  cameraFeed.onerror = () => {
+    cameraFeed.dataset.live = "false";
+    setCameraStatus("Waiting");
+    setTimeout(connectCameraFeed, 1500);
+  };
+  cameraFeed.src = `/api/camera/stream.mjpg?t=${Date.now()}`;
+}
+
+connectCameraFeed();
